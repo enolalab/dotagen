@@ -1,0 +1,80 @@
+---
+name: "dotagent:netlify:netlify-frameworks"
+description: "Deploy web frameworks with SSR support"
+category: "Cloud & Infrastructure"
+vendor: "netlify"
+---
+
+# Frameworks on Netlify
+
+Netlify supports any framework that produces static output. For frameworks with server-side capabilities (SSR, API routes, middleware), an adapter or plugin translates the framework's server-side code into Netlify Functions and Edge Functions automatically.
+
+## How It Works
+
+During build, the framework adapter writes files to `.netlify/v1/` — functions, edge functions, redirects, and configuration. Netlify reads these to deploy the site. You do not need to write Netlify Functions manually when using a framework adapter for server-side features.
+
+## Detecting Your Framework
+
+Check these files to determine the framework:
+
+| File | Framework |
+|---|---|
+| `astro.config.*` | Astro |
+| `next.config.*` | Next.js |
+| `nuxt.config.*` | Nuxt |
+| `vite.config.*` + `react-router` | Vite + React (SPA or Remix) |
+| `vite.config.*` + `@tanstack/react-start` | TanStack Start |
+| `svelte.config.*` | SvelteKit |
+
+## Framework Reference Guides
+
+Each framework has specific adapter/plugin requirements and local dev patterns:
+
+- **Vite + React (SPA or with server routes)**: See [references/vite.md](references/vite.md)
+- **Astro**: See [references/astro.md](references/astro.md)
+- **TanStack Start**: See [references/tanstack.md](references/tanstack.md)
+- **Next.js**: See [references/nextjs.md](references/nextjs.md)
+- **Nuxt**: See [references/nuxt.md](references/nuxt.md)
+- **SvelteKit**: See [references/sveltekit.md](references/sveltekit.md)
+
+## General Patterns
+
+### Client-Side Routing (SPA)
+
+For single-page apps with client-side routing, add a catch-all redirect:
+
+```toml
+# netlify.toml
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+```
+
+> **Remove this catch-all when you adopt an SSR adapter.** A `/* → /index.html` rule left over from an SPA setup will shadow your server routes: user-defined redirects in `netlify.toml`/`_redirects` take precedence over the routes a framework adapter generates, so every request — including SSR pages and API/function routes — is served the static `index.html` with a 200. When you migrate a client-rendered app to SSR, delete the SPA catch-all.
+
+### Custom 404 Pages
+
+- **Static sites**: Create a `404.html` in your publish directory. Netlify serves it automatically for unmatched routes.
+- **SSR frameworks**: Handle 404s in the framework's routing (the adapter maps this to Netlify's function routing).
+
+### Environment Variables in Frameworks
+
+Each framework exposes environment variables to client-side code differently:
+
+| Framework | Client prefix | Access pattern |
+|---|---|---|
+| Vite / React | `VITE_` | `import.meta.env.VITE_VAR` |
+| Astro | `PUBLIC_` | `import.meta.env.PUBLIC_VAR` |
+| Next.js | `NEXT_PUBLIC_` | `process.env.NEXT_PUBLIC_VAR` |
+| Nuxt | `NUXT_PUBLIC_` | `useRuntimeConfig().public.var` |
+
+Server-side code in all frameworks can access variables via `process.env.VAR` or `Netlify.env.get("VAR")`.
+
+### Environment Variable Changes Require a Redeploy
+
+Client-prefixed vars (`VITE_`, `NEXT_PUBLIC_`, `PUBLIC_`, `NUXT_PUBLIC_`) are **inlined into the client bundle at build time** — their values are compiled into the JavaScript shipped to the browser. Editing one in the Netlify UI or CLI has no effect on the live site until a new build runs. The same applies server-side: Netlify injects environment variables at build time, so changing a value in the dashboard does **not** propagate to already-deployed functions on the next request. Any env var change — client- or server-side — requires a redeploy to take effect. If a value looks stale after you changed it, trigger a new deploy.
+
+### Runtime File Reads in Adapter-Generated Functions
+
+When an adapter turns your server code into a Netlify Function, only traced module dependencies are bundled. Arbitrary files you read from disk at runtime — a local JSON/Markdown data file, an email template, an `fs.readFile()` target — are **not** uploaded with the function unless you declare them. Such a read succeeds under `npm run dev` (the whole project is on disk) but throws `ENOENT` in production. Declare the files so they ship with the function: in Next.js set `outputFileTracingIncludes` in `next.config`; for a hand-written Netlify Function use `included_files` in its `config`. Never assume the project filesystem is present at function runtime.

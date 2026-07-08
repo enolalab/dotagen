@@ -11,3 +11,5 @@ dist/
 .opencode/
 .vscode/
 .codex
+skillsrc/.page_cache.json
+skillsrc/.tree_cache.json

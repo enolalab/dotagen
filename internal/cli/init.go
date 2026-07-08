@@ -10,13 +10,14 @@ import (
 	"github.com/enolalabs/dotagen/v2/internal/builtin"
 	"github.com/enolalabs/dotagen/v2/internal/config"
 	"github.com/enolalabs/dotagen/v2/internal/engine"
+	"github.com/enolalabs/dotagen/v2/skillsrc"
 	"github.com/spf13/cobra"
 )
 
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "Initialize ~/.dotagen directory structure",
-	Long:  "Create a ~/.dotagen/ directory in $HOME with 144 built-in agents and default config. All agents are created with empty targets — edit config.yaml to enable them.",
+	Long:  "Create a ~/.dotagen/ directory in $HOME with built-in skills and default config. All skills are created with empty targets — edit config.yaml to enable them.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		home, err := os.UserHomeDir()
 		if err != nil {
@@ -84,12 +85,12 @@ var initCmd = &cobra.Command{
 			}
 		}
 
-		// Copy builtin skills
-		skillNames := builtin.ListSkills()
+		// Copy skills
+		skillNames := skillsrc.ListSkills()
 		for _, name := range skillNames {
-			files := builtin.ListSkillFiles(name)
+			files := skillsrc.ListSkillFiles(name)
 			for _, file := range files {
-				data, err := builtin.ReadSkillFile(name + "/" + file)
+				data, err := skillsrc.ReadSkillFile(name + "/" + file)
 				if err != nil {
 					return fmt.Errorf("failed to read built-in skill %s/%s: %w", name, file, err)
 				}

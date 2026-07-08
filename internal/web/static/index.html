@@ -1,225 +1,533 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html class="dark" lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>dotagen</title>
+    <title>dotagen | Control Plane</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface": "#131315",
+                        "surface-dim": "#131315",
+                        "surface-bright": "#39393b",
+                        "surface-container-lowest": "#0e0e10",
+                        "surface-container-low": "#1c1b1d",
+                        "surface-container": "#201f22",
+                        "surface-container-high": "#2a2a2c",
+                        "surface-container-highest": "#353437",
+                        "on-surface": "#e5e1e4",
+                        "on-surface-variant": "#c4c7c8",
+                        "inverse-surface": "#e5e1e4",
+                        "inverse-on-surface": "#313032",
+                        "outline": "#8e9192",
+                        "outline-variant": "#444748",
+                        "surface-tint": "#c6c6c7",
+                        "primary": "#ffffff",
+                        "on-primary": "#2f3131",
+                        "primary-container": "#e2e2e2",
+                        "on-primary-container": "#636565",
+                        "inverse-primary": "#5d5f5f",
+                        "secondary": "#c8c6c9",
+                        "on-secondary": "#303033",
+                        "secondary-container": "#47464a",
+                        "on-secondary-container": "#b6b4b8",
+                        "tertiary": "#ffffff",
+                        "on-tertiary": "#32302d",
+                        "tertiary-container": "#e7e1dd",
+                        "on-tertiary-container": "#676460",
+                        "error": "#ffb4ab",
+                        "on-error": "#690005",
+                        "error-container": "#93000a",
+                        "on-error-container": "#ffdad6",
+                        "primary-fixed": "#e2e2e2",
+                        "primary-fixed-dim": "#c6c6c7",
+                        "on-primary-fixed": "#1a1c1c",
+                        "on-primary-fixed-variant": "#454747",
+                        "secondary-fixed": "#e4e1e5",
+                        "secondary-fixed-dim": "#c8c6c9",
+                        "on-secondary-fixed": "#1b1b1e",
+                        "on-secondary-fixed-variant": "#47464a",
+                        "tertiary-fixed": "#e7e1dd",
+                        "tertiary-fixed-dim": "#cbc6c1",
+                        "on-tertiary-fixed": "#1d1b19",
+                        "on-tertiary-fixed-variant": "#494643",
+                        "background": "#131315",
+                        "on-background": "#e5e1e4",
+                        "surface-variant": "#353437",
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "sm": "0.125rem",
+                        "md": "0.25rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem",
+                    },
+                    spacing: {
+                        "container-padding": "24px",
+                        "component-gap-dense": "4px",
+                        "unit": "4px",
+                        "component-gap-normal": "8px",
+                        "gutter": "12px",
+                    },
+                    fontFamily: {
+                        "mono-base": ["JetBrains Mono", "monospace"],
+                        "label-caps": ["JetBrains Mono", "monospace"],
+                        "body-base": ["Geist", "sans-serif"],
+                        "body-sm": ["Geist", "sans-serif"],
+                        "headline": ["Geist", "sans-serif"],
+                        "mono-sm": ["JetBrains Mono", "monospace"],
+                        "display": ["Geist", "sans-serif"],
+                    },
+                    fontSize: {
+                        "mono-base": ["13px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-caps": ["11px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-base": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "body-sm": ["13px", {"lineHeight": "18px", "fontWeight": "400"}],
+                        "headline": ["18px", {"lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "500"}],
+                        "mono-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "display": ["24px", {"lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                    },
+                },
+            },
+        }
+    </script>
 </head>
-<body>
-    <header class="toolbar" role="banner">
-        <div class="toolbar-left">
-            <span class="logo" aria-hidden="true">⚡</span>
-            <span class="logo-text">dotagen</span>
+<body class="bg-background text-on-surface font-body-base flex h-screen overflow-hidden">
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="flex flex-col h-full overflow-y-auto w-64 border-r border-outline-variant bg-surface flex-shrink-0" id="sidebar">
+    <!-- Brand -->
+    <div class="p-container-padding">
+        <div class="flex items-center gap-3 mb-8">
+            <div class="w-8 h-8 bg-primary rounded flex items-center justify-center">
+                <span class="material-symbols-outlined text-surface" style="font-variation-settings: 'FILL' 1;">terminal</span>
+            </div>
+            <div>
+                <h1 class="font-mono-base text-mono-base font-bold text-primary">dotagen</h1>
+                <p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-mono-sm">Control Plane</p>
+            </div>
         </div>
-        <div class="toolbar-search">
-            <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.5"/><path d="m11 11 3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-            <input type="search" id="global-search" placeholder="Search agents & skills… ( / )" aria-label="Search agents and skills" autocomplete="off">
+        <!-- Navigation -->
+        <nav class="space-y-1" id="nav-menu">
+            <a class="nav-item flex items-center gap-3 px-3 py-2 text-primary bg-surface-container-high border-r-2 border-primary font-mono-sm cursor-pointer" data-view="overview" onclick="switchView('overview')">
+                <span class="material-symbols-outlined">dashboard</span>
+                <span>Overview</span>
+            </a>
+            <a class="nav-item flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-200 font-mono-sm cursor-pointer" data-view="agents" onclick="switchView('agents')">
+                <span class="material-symbols-outlined">smart_toy</span>
+                <span>Agent Library</span>
+                <span class="ml-auto text-[10px] text-on-surface-variant opacity-50 font-mono-sm" id="nav-agent-count"></span>
+            </a>
+            <a class="nav-item flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-200 font-mono-sm cursor-pointer" data-view="skills" onclick="switchView('skills')">
+                <span class="material-symbols-outlined">extension</span>
+                <span>Skill Library</span>
+                <span class="ml-auto text-[10px] text-on-surface-variant opacity-50 font-mono-sm" id="nav-skill-count"></span>
+            </a>
+            <a class="nav-item flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-200 font-mono-sm cursor-pointer" data-view="status" onclick="switchView('status')">
+                <span class="material-symbols-outlined">sync_alt</span>
+                <span>Sync Status</span>
+                <span class="ml-auto hidden" id="nav-status-badge"></span>
+            </a>
+        </nav>
+    </div>
+    <!-- CTA -->
+    <div class="mt-auto p-container-padding border-t border-outline-variant space-y-4">
+        <button class="w-full h-8 bg-primary text-on-primary font-mono-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all" onclick="triggerSync()">
+            <span class="material-symbols-outlined !text-[16px]">sync</span>
+            Sync All
+        </button>
+        <div class="flex items-center gap-3 px-3">
+            <div class="w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center border border-outline-variant">
+                <span class="material-symbols-outlined !text-[14px] text-on-surface-variant">person</span>
+            </div>
+            <span class="font-mono-sm text-on-surface-variant text-mono-sm">Local</span>
+            <span class="ml-auto w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#22c55e]" id="conn-indicator"></span>
         </div>
-        <div class="toolbar-right">
-            <button class="btn btn-ghost" id="btn-theme" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle light/dark theme">
-                <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-                <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"/></svg>
-            </button>
-            <button class="btn btn-secondary" id="btn-sync" onclick="triggerSync()">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1.5 8a6.5 6.5 0 0 1 11.48-4.15M14.5 8A6.5 6.5 0 0 1 3.02 12.15"/><path d="m10 1 3 3-3 3m-4 6-3-3 3-3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                <span>Sync</span>
-            </button>
-            <button class="btn btn-primary" id="btn-create" onclick="showCreateAgent()">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
-                <span>New Agent</span>
-            </button>
-            <button class="btn btn-secondary" id="btn-create-skill" onclick="showCreateSkill()">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M8 3v10M3 8h10"/></svg>
-                <span>New Skill</span>
+    </div>
+</aside>
+
+<!-- ═══ MAIN CONTENT ═══ -->
+<main class="flex-1 flex flex-col min-w-0 bg-background overflow-hidden">
+
+    <!-- Top App Bar -->
+    <header class="flex justify-between items-center h-12 px-container-padding w-full sticky top-0 z-40 bg-surface border-b border-outline-variant">
+        <div class="flex items-center gap-gutter">
+            <span class="font-mono-base text-mono-base font-bold text-primary" id="topbar-title">Overview</span>
+            <div class="h-4 w-px bg-outline-variant"></div>
+            <span class="font-mono-sm text-mono-sm text-on-surface-variant" id="topbar-subtitle"></span>
+        </div>
+        <div class="flex items-center gap-gutter">
+            <!-- Search -->
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-on-surface-variant !text-[16px] pointer-events-none">search</span>
+                <input class="bg-surface-container-lowest border border-outline-variant h-8 pl-8 pr-16 text-mono-sm w-64 focus:outline-none focus:border-primary transition-colors" placeholder="Search…" type="text" id="global-search" autocomplete="off">
+                <div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-0.5 pointer-events-none">
+                    <kbd class="px-1 py-0.5 border border-outline-variant bg-surface-container-low text-[9px] text-on-surface-variant font-mono-sm rounded-sm">⌘K</kbd>
+                </div>
+            </div>
+            <!-- New button -->
+            <button class="h-8 px-3 bg-primary text-on-primary font-mono-sm font-bold flex items-center gap-1 hover:opacity-90 active:scale-95 transition-all" onclick="quickCreate()">
+                <span class="material-symbols-outlined !text-[16px]">add</span>
+                New
             </button>
         </div>
     </header>
 
-    <nav class="tab-bar" role="tablist" aria-label="Main navigation">
-        <button class="tab active" data-tab="agents" role="tab" aria-selected="true" aria-controls="tab-agents">
-            <span>Agents</span>
-            <span class="tab-badge" id="badge-agents">0</span>
-        </button>
-        <button class="tab" data-tab="skills" role="tab" aria-selected="false" aria-controls="tab-skills">
-            <span>Skills</span>
-            <span class="tab-badge" id="badge-skills">0</span>
-        </button>
-        <button class="tab" data-tab="preview" role="tab" aria-selected="false" aria-controls="tab-preview">
-            <span>Preview</span>
-        </button>
-        <button class="tab" data-tab="status" role="tab" aria-selected="false" aria-controls="tab-status">
-            <span>Status</span>
-            <span class="tab-badge tab-badge-warn hidden" id="badge-status">0</span>
-        </button>
-    </nav>
-
-    <main class="content" role="main">
-        <!-- AGENTS TAB -->
-        <section id="tab-agents" class="tab-panel active" role="tabpanel">
-            <div class="agents-toolbar">
-                <div class="filter-chips" id="category-chips"></div>
-                <span class="agent-count" id="agent-count"></span>
-            </div>
-            <div class="bulk-bar hidden" id="bulk-bar">
-                <span class="bulk-count" id="bulk-count">0 selected</span>
-                <span class="bulk-sep">—</span>
-                <span class="bulk-label">Enable:</span>
-                <div class="bulk-targets" id="bulk-enable-targets"></div>
-                <span class="bulk-sep">|</span>
-                <span class="bulk-label">Disable:</span>
-                <div class="bulk-targets" id="bulk-disable-targets"></div>
-                <span class="bulk-sep">|</span>
-                <button class="btn btn-ghost btn-sm" onclick="bulkEnableAll()">All On</button>
-                <button class="btn btn-ghost btn-sm" onclick="bulkDisableAll()">All Off</button>
-                <button class="btn btn-ghost btn-sm" onclick="clearSelection()">Clear</button>
-            </div>
-            <div class="agents-table-wrap">
-                <table class="agents-table" id="agents-table">
-                    <thead>
-                        <tr>
-                            <th class="col-check"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this.checked)" title="Select all"></th>
-                            <th class="col-name">Agent</th>
-                            <th class="col-desc">Description</th>
-                            <th class="col-cat">Category</th>
-                            <th class="col-platforms" id="platforms-header">Platforms</th>
-                            <th class="col-actions"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="agents-tbody"></tbody>
-                </table>
-            </div>
-            <div class="agents-empty hidden" id="agents-empty">
-                <div class="empty-icon">⚡</div>
-                <h3>No agents yet</h3>
-                <p>Create your first agent or run <code>dotagen init</code> to import 144 built-in agents.</p>
-                <button class="btn btn-primary" onclick="showCreateAgent()">Create Agent</button>
-            </div>
-            <div class="agents-no-results hidden" id="agents-no-results">
-                <p>No agents match your search.</p>
-            </div>
-        </section>
-
-        <!-- SKILLS TAB -->
-        <section id="tab-skills" class="tab-panel" role="tabpanel">
-            <div class="agents-toolbar">
-                <div class="filter-chips" id="skill-category-chips"></div>
-                <span class="agent-count" id="skill-count"></span>
-            </div>
-            <div class="bulk-bar hidden" id="skill-bulk-bar">
-                <span class="bulk-count" id="skill-bulk-count">0 selected</span>
-                <span class="bulk-sep">—</span>
-                <span class="bulk-label">Enable:</span>
-                <div class="bulk-targets" id="skill-bulk-enable-targets"></div>
-                <span class="bulk-sep">|</span>
-                <span class="bulk-label">Disable:</span>
-                <div class="bulk-targets" id="skill-bulk-disable-targets"></div>
-                <span class="bulk-sep">|</span>
-                <button class="btn btn-ghost btn-sm" onclick="skillBulkEnableAll()">All On</button>
-                <button class="btn btn-ghost btn-sm" onclick="skillBulkDisableAll()">All Off</button>
-                <button class="btn btn-ghost btn-sm" onclick="clearSkillSelection()">Clear</button>
-            </div>
-            <div class="agents-table-wrap">
-                <table class="agents-table" id="skills-table">
-                    <thead>
-                        <tr>
-                            <th class="col-check"><input type="checkbox" id="skill-select-all" onchange="toggleSkillSelectAll(this.checked)" title="Select all"></th>
-                            <th class="col-name">Skill</th>
-                            <th class="col-desc">Description</th>
-                            <th class="col-cat">Category</th>
-                            <th class="col-platforms" id="skill-platforms-header">Platforms</th>
-                            <th class="col-actions"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="skills-tbody"></tbody>
-                </table>
-            </div>
-            <div class="agents-empty hidden" id="skills-empty">
-                <div class="empty-icon">🛠</div>
-                <h3>No skills yet</h3>
-                <p>Create your first skill or run <code>dotagen init</code> to import 16 built-in skills.</p>
-                <button class="btn btn-primary" onclick="showCreateSkill()">Create Skill</button>
-            </div>
-            <div class="agents-no-results hidden" id="skills-no-results">
-                <p>No skills match your search.</p>
-            </div>
-        </section>
-
-        <!-- PREVIEW TAB -->
-        <section id="tab-preview" class="tab-panel" role="tabpanel">
-            <div class="preview-layout">
-                <div class="preview-controls">
-                    <div class="preview-selects">
-                        <div class="select-group">
-                            <label for="preview-agent">Agent</label>
-                            <select id="preview-agent" class="select" onchange="autoPreview()">
-                                <option value="">Select agent…</option>
-                            </select>
-                        </div>
-                        <div class="select-group">
-                            <label for="preview-target">Platform</label>
-                            <select id="preview-target" class="select" onchange="autoPreview()">
-                                <option value="">Select platform…</option>
-                            </select>
-                        </div>
+    <!-- ═══ VIEW: OVERVIEW ═══ -->
+    <div id="view-overview" class="flex-1 overflow-y-auto">
+        <div class="p-container-padding space-y-gutter">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-gutter" id="overview-cards">
+                <div class="bg-surface border border-outline-variant p-4 space-y-2">
+                    <span class="font-label-caps text-on-surface-variant uppercase">Total Agents</span>
+                    <div class="flex items-baseline gap-2">
+                        <span class="font-mono-base text-display text-primary" id="stat-agents">—</span>
                     </div>
-                    <div class="preview-actions">
-                        <button class="btn btn-ghost" id="preview-copy-btn" onclick="copyPreview()" disabled>Copy</button>
+                    <div class="h-1 bg-surface-container-highest w-full overflow-hidden">
+                        <div class="h-full bg-primary transition-all duration-500" style="width: 0%" id="stat-agents-bar"></div>
                     </div>
                 </div>
-                <div class="preview-output-wrap">
-                    <pre class="preview-output" id="preview-output">Select an agent and platform to preview rendered output.</pre>
+                <div class="bg-surface border border-outline-variant p-4 space-y-2">
+                    <span class="font-label-caps text-on-surface-variant uppercase">Total Skills</span>
+                    <div class="flex items-baseline gap-2">
+                        <span class="font-mono-base text-display text-primary" id="stat-skills">—</span>
+                    </div>
+                    <div class="h-1 bg-surface-container-highest w-full overflow-hidden">
+                        <div class="h-full bg-primary transition-all duration-500" style="width: 0%" id="stat-skills-bar"></div>
+                    </div>
+                </div>
+                <div class="bg-surface border border-outline-variant p-4 space-y-2">
+                    <span class="font-label-caps text-on-surface-variant uppercase">Sync Health</span>
+                    <div class="flex items-baseline gap-2">
+                        <span class="font-mono-base text-display text-primary" id="stat-health">—</span>
+                        <span class="text-[10px] text-on-surface-variant font-mono-sm" id="stat-health-detail"></span>
+                    </div>
+                    <div class="h-1 bg-surface-container-highest w-full overflow-hidden">
+                        <div class="h-full bg-primary transition-all duration-500" style="width: 0%" id="stat-health-bar"></div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button class="flex-1 h-[36px] bg-primary text-on-primary font-mono-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all" onclick="triggerSync()">
+                        <span class="material-symbols-outlined !text-[16px]">sync</span>
+                        Sync All
+                    </button>
+                    <button class="flex-1 h-[36px] border border-outline-variant text-on-surface font-mono-sm hover:bg-surface-container-low active:scale-95 transition-all" onclick="triggerClean()">
+                        Clean Symlinks
+                    </button>
                 </div>
             </div>
-        </section>
 
-        <!-- STATUS TAB -->
-        <section id="tab-status" class="tab-panel" role="tabpanel">
-            <div class="status-toolbar">
-                <div class="filter-chips" id="status-chips"></div>
-                <div class="status-actions-bar">
-                    <button class="btn btn-secondary btn-sm" onclick="triggerSync()">Sync All</button>
-                    <button class="btn btn-ghost btn-sm btn-danger-text" onclick="triggerClean()">Clean</button>
+            <!-- Category Distribution + Platform Health -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+                <!-- Category Distribution -->
+                <div class="lg:col-span-2 bg-surface border border-outline-variant flex flex-col">
+                    <div class="p-3 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+                        <span class="font-label-caps text-on-surface-variant uppercase">Category Distribution</span>
+                        <span class="material-symbols-outlined text-outline !text-[16px]">sort</span>
+                    </div>
+                    <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4" id="overview-categories">
+                        <p class="text-mono-sm text-on-surface-variant">Loading…</p>
+                    </div>
+                </div>
+                <!-- Platform Sync Status -->
+                <div class="bg-surface border border-outline-variant">
+                    <div class="p-3 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+                        <span class="font-label-caps text-on-surface-variant uppercase">Sync by Platform</span>
+                        <div class="flex gap-1 items-center">
+                            <div class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                            <span class="text-[10px] text-on-surface-variant font-mono-sm">Live</span>
+                        </div>
+                    </div>
+                    <div class="p-4 space-y-4" id="overview-platforms">
+                        <p class="text-mono-sm text-on-surface-variant">Loading…</p>
+                    </div>
                 </div>
             </div>
-            <div class="status-list" id="status-list"></div>
-            <div class="status-empty hidden" id="status-empty">
-                <div class="empty-icon">✓</div>
-                <h3>No generated files</h3>
-                <p>Run Sync to generate platform-specific files from your agents.</p>
+
+            <!-- Recent Activity -->
+            <div class="bg-surface border border-outline-variant overflow-hidden">
+                <div class="p-3 border-b border-outline-variant flex justify-between items-center bg-surface-container-low">
+                    <span class="font-label-caps text-on-surface-variant uppercase">Symlink Status</span>
+                    <button class="text-on-surface-variant hover:text-primary font-mono-sm flex items-center gap-1" onclick="switchView('status')">
+                        View Full Status
+                        <span class="material-symbols-outlined !text-[14px]">open_in_new</span>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left font-mono-sm border-collapse">
+                        <thead>
+                            <tr class="text-on-surface-variant border-b border-outline-variant bg-surface-container-lowest">
+                                <th class="px-4 py-2 font-label-caps uppercase">Agent</th>
+                                <th class="px-4 py-2 font-label-caps uppercase">Platform</th>
+                                <th class="px-4 py-2 font-label-caps uppercase">Path</th>
+                                <th class="px-4 py-2 font-label-caps uppercase text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant" id="overview-recent">
+                            <tr><td colspan="4" class="px-4 py-8 text-center text-on-surface-variant">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </section>
-    </main>
-
-    <!-- SLIDE-OUT PANEL -->
-    <div class="panel-overlay hidden" id="panel-overlay" onclick="closePanel()"></div>
-    <aside class="panel" id="agent-panel" role="complementary" aria-label="Agent details">
-        <div class="panel-header">
-            <h2 id="panel-title">Agent</h2>
-            <button class="btn-icon" onclick="closePanel()" aria-label="Close panel">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="m5 5 8 8M13 5l-8 8"/></svg>
-            </button>
-        </div>
-        <div class="panel-body" id="panel-body"></div>
-        <div class="panel-footer" id="panel-footer"></div>
-    </aside>
-
-    <!-- CONFIRM MODAL -->
-    <div class="modal-overlay hidden" id="modal" role="dialog" aria-modal="true">
-        <div class="modal-box">
-            <h3 id="modal-title"></h3>
-            <p id="modal-body"></p>
-            <div class="modal-actions" id="modal-actions"></div>
         </div>
     </div>
 
-    <!-- SNACKBAR -->
-    <div class="snackbar" id="snackbar" aria-live="polite"></div>
+    <!-- ═══ VIEW: AGENT LIBRARY ═══ -->
+    <div id="view-agents" class="hidden flex-1 flex flex-col overflow-hidden">
+        <!-- Sub-header: filters -->
+        <div class="flex items-center justify-between px-container-padding py-2 border-b border-outline-variant bg-surface-container-lowest">
+            <div class="flex items-center gap-gutter flex-wrap" id="agent-filters"></div>
+            <div class="flex items-center gap-component-gap-normal">
+                <span class="text-[10px] font-label-caps text-on-surface-variant">BULK</span>
+                <div class="flex gap-1" id="agent-bulk-actions"></div>
+            </div>
+        </div>
+        <!-- Bulk bar -->
+        <div class="hidden flex items-center gap-2 px-container-padding py-1.5 border-b border-outline-variant bg-surface-container-low" id="agent-bulk-bar">
+            <span class="font-mono-sm text-primary font-bold" id="agent-bulk-count">0 selected</span>
+            <span class="text-outline-variant">|</span>
+            <span class="text-[10px] font-label-caps text-on-surface-variant">ENABLE:</span>
+            <div class="flex gap-1" id="agent-bulk-enable"></div>
+            <span class="text-outline-variant">|</span>
+            <button class="px-2 py-0.5 text-[10px] font-mono-sm text-on-surface-variant hover:text-primary" onclick="bulkEnableAll()">ALL ON</button>
+            <button class="px-2 py-0.5 text-[10px] font-mono-sm text-on-surface-variant hover:text-primary" onclick="bulkDisableAll()">ALL OFF</button>
+            <button class="px-2 py-0.5 text-[10px] font-mono-sm text-on-surface-variant hover:text-primary ml-auto" onclick="clearSelection()">CLEAR</button>
+        </div>
+        <!-- List / Matrix toggle -->
+        <div class="flex items-center justify-between px-container-padding py-2 border-b border-outline-variant">
+            <span class="font-mono-sm text-on-surface-variant" id="agent-count"></span>
+            <div class="flex items-center gap-component-gap-dense border border-outline-variant overflow-hidden">
+                <button class="px-2 py-1 bg-surface-container-high text-primary view-toggle-btn active" id="agent-list-btn" onclick="setLibraryView('list')">
+                    <span class="material-symbols-outlined !text-[16px]">list</span>
+                </button>
+                <button class="px-2 py-1 text-on-surface-variant hover:bg-surface-container-low view-toggle-btn" id="agent-matrix-btn" onclick="setLibraryView('matrix')">
+                    <span class="material-symbols-outlined !text-[16px]">grid_view</span>
+                </button>
+            </div>
+        </div>
+        <!-- Content -->
+        <div class="flex-1 overflow-auto" id="agent-content">
+            <!-- List view -->
+            <div id="agent-list-view">
+                <table class="w-full text-left font-mono-sm border-collapse">
+                    <thead class="sticky top-0 z-10">
+                        <tr class="text-on-surface-variant border-b border-outline-variant bg-surface-container-lowest">
+                            <th class="px-4 py-2 w-10"><input type="checkbox" id="agent-select-all" class="agent-cb" onchange="toggleSelectAll(this.checked)"></th>
+                            <th class="px-4 py-2 font-label-caps uppercase">Agent</th>
+                            <th class="px-4 py-2 font-label-caps uppercase">Description</th>
+                            <th class="px-4 py-2 font-label-caps uppercase">Category</th>
+                            <th class="px-4 py-2 font-label-caps uppercase" id="agent-platform-header">Platforms</th>
+                            <th class="px-2 py-2 w-8"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant" id="agent-tbody"></tbody>
+                </table>
+            </div>
+            <!-- Matrix view -->
+            <div class="hidden p-container-padding overflow-auto" id="agent-matrix-view">
+                <table class="border-separate border-spacing-0 table-fixed min-w-[800px] w-full" id="agent-matrix-table">
+                    <thead id="agent-matrix-head"></thead>
+                    <tbody id="agent-matrix-body"></tbody>
+                </table>
+            </div>
+        </div>
+        <!-- Empty states -->
+        <div class="hidden flex-1 flex-col items-center justify-center p-container-padding" id="agent-empty">
+            <span class="material-symbols-outlined text-outline !text-[48px] mb-4">smart_toy</span>
+            <h3 class="font-headline text-headline text-on-surface mb-2">No agents yet</h3>
+            <p class="text-body-sm text-on-surface-variant mb-4 text-center max-w-sm">Create your first agent or run <code class="px-1 py-0.5 bg-surface-container-low font-mono-sm text-primary">dotagen init</code> to import 144 built-in agents.</p>
+            <button class="h-8 px-4 bg-primary text-on-primary font-mono-sm font-bold hover:opacity-90 active:scale-95 transition-all" onclick="showCreateAgent()">Create Agent</button>
+        </div>
+    </div>
 
-    <script src="/app.js"></script>
+    <!-- ═══ VIEW: SKILL LIBRARY ═══ -->
+    <div id="view-skills" class="hidden flex-1 flex flex-col overflow-hidden">
+        <!-- Sub-header -->
+        <div class="flex items-center justify-between px-container-padding py-2 border-b border-outline-variant bg-surface-container-lowest">
+            <div class="flex items-center gap-gutter flex-wrap" id="skill-filters"></div>
+            <div class="flex items-center gap-component-gap-normal">
+                <span class="text-[10px] font-label-caps text-on-surface-variant">BULK</span>
+                <div class="flex gap-1" id="skill-bulk-actions"></div>
+            </div>
+        </div>
+        <!-- Bulk bar -->
+        <div class="hidden flex items-center gap-2 px-container-padding py-1.5 border-b border-outline-variant bg-surface-container-low" id="skill-bulk-bar">
+            <span class="font-mono-sm text-primary font-bold" id="skill-bulk-count">0 selected</span>
+            <span class="text-outline-variant">|</span>
+            <span class="text-[10px] font-label-caps text-on-surface-variant">ENABLE:</span>
+            <div class="flex gap-1" id="skill-bulk-enable"></div>
+            <span class="text-outline-variant">|</span>
+            <button class="px-2 py-0.5 text-[10px] font-mono-sm text-on-surface-variant hover:text-primary" onclick="skillBulkEnableAll()">ALL ON</button>
+            <button class="px-2 py-0.5 text-[10px] font-mono-sm text-on-surface-variant hover:text-primary" onclick="skillBulkDisableAll()">ALL OFF</button>
+            <button class="px-2 py-0.5 text-[10px] font-mono-sm text-on-surface-variant hover:text-primary ml-auto" onclick="clearSkillSelection()">CLEAR</button>
+        </div>
+        <!-- Count -->
+        <div class="flex items-center justify-between px-container-padding py-2 border-b border-outline-variant">
+            <span class="font-mono-sm text-on-surface-variant" id="skill-count"></span>
+        </div>
+        <!-- Content -->
+        <div class="flex-1 overflow-auto">
+            <table class="w-full text-left font-mono-sm border-collapse">
+                <thead class="sticky top-0 z-10">
+                    <tr class="text-on-surface-variant border-b border-outline-variant bg-surface-container-lowest">
+                        <th class="px-4 py-2 w-10"><input type="checkbox" id="skill-select-all" class="agent-cb" onchange="toggleSkillSelectAll(this.checked)"></th>
+                        <th class="px-4 py-2 font-label-caps uppercase">Skill</th>
+                        <th class="px-4 py-2 font-label-caps uppercase">Description</th>
+                        <th class="px-4 py-2 font-label-caps uppercase">Category</th>
+                        <th class="px-4 py-2 font-label-caps uppercase" id="skill-platform-header">Platforms</th>
+                        <th class="px-2 py-2 w-8"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-outline-variant" id="skill-tbody"></tbody>
+            </table>
+        </div>
+        <!-- Empty states -->
+        <div class="hidden flex-1 flex-col items-center justify-center p-container-padding" id="skill-empty">
+            <span class="material-symbols-outlined text-outline !text-[48px] mb-4">extension</span>
+            <h3 class="font-headline text-headline text-on-surface mb-2">No skills yet</h3>
+            <p class="text-body-sm text-on-surface-variant mb-4 text-center max-w-sm">Create your first skill or run <code class="px-1 py-0.5 bg-surface-container-low font-mono-sm text-primary">dotagen init</code> to import 16 built-in skills.</p>
+            <button class="h-8 px-4 bg-primary text-on-primary font-mono-sm font-bold hover:opacity-90 active:scale-95 transition-all" onclick="showCreateSkill()">Create Skill</button>
+        </div>
+    </div>
+
+    <!-- ═══ VIEW: STATUS ═══ -->
+    <div id="view-status" class="hidden flex-1 flex flex-col overflow-hidden">
+        <!-- Sub-header -->
+        <div class="flex items-center justify-between px-container-padding py-2 border-b border-outline-variant bg-surface-container-lowest">
+            <div class="flex items-center gap-gutter flex-wrap" id="status-filters"></div>
+            <div class="flex items-center gap-2">
+                <button class="h-7 px-3 bg-primary text-on-primary font-mono-sm font-bold flex items-center gap-1 hover:opacity-90 active:scale-95 transition-all" onclick="triggerSync()">
+                    <span class="material-symbols-outlined !text-[14px]">sync</span>
+                    Sync All
+                </button>
+                <button class="h-7 px-3 border border-outline-variant text-on-surface font-mono-sm hover:bg-surface-container-low active:scale-95 transition-all" onclick="triggerClean()">Clean</button>
+            </div>
+        </div>
+        <!-- Status list -->
+        <div class="flex-1 overflow-auto p-container-padding" id="status-list-container">
+            <div class="bg-surface border border-outline-variant overflow-hidden">
+                <table class="w-full text-left font-mono-sm border-collapse">
+                    <thead class="sticky top-0 z-10">
+                        <tr class="text-on-surface-variant border-b border-outline-variant bg-surface-container-lowest">
+                            <th class="px-4 py-2 font-label-caps uppercase">Status</th>
+                            <th class="px-4 py-2 font-label-caps uppercase">Agent</th>
+                            <th class="px-4 py-2 font-label-caps uppercase">Platform</th>
+                            <th class="px-4 py-2 font-label-caps uppercase">Path</th>
+                            <th class="px-2 py-2 w-8"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-outline-variant" id="status-tbody"></tbody>
+                </table>
+            </div>
+            <div class="hidden flex-col items-center justify-center p-container-padding mt-8" id="status-empty">
+                <span class="material-symbols-outlined text-outline !text-[48px] mb-4">check_circle</span>
+                <h3 class="font-headline text-headline text-on-surface mb-2">No generated files</h3>
+                <p class="text-body-sm text-on-surface-variant text-center">Run Sync to generate platform-specific files from your agents.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status footer bar -->
+    <footer class="h-8 bg-surface-container-lowest border-t border-outline-variant flex items-center px-4 gap-4 overflow-hidden flex-shrink-0">
+        <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#22c55e]"></span>
+            <span class="font-mono-sm text-outline text-[10px]" id="footer-status">READY</span>
+        </div>
+        <div class="flex-1 flex items-center gap-4 text-[10px] font-mono-sm text-outline truncate">
+            <span id="footer-info"></span>
+        </div>
+        <div class="text-[10px] font-mono-sm text-outline" id="footer-clock"></div>
+    </footer>
+</main>
+
+<!-- ═══ DETAIL DRAWER ═══ -->
+<div class="hidden fixed inset-0 bg-black/40 z-40" id="drawer-overlay" onclick="closeDrawer()"></div>
+<aside class="fixed inset-y-0 right-0 w-full sm:w-[560px] bg-surface border-l border-outline-variant shadow-2xl flex flex-col z-50 transform translate-x-full transition-transform duration-300" id="detail-drawer">
+
+    <!-- Sync warning banner -->
+    <div class="hidden bg-error-container text-on-error-container px-container-padding py-1.5 flex items-center justify-between" id="drawer-banner">
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined !text-[14px]" style="font-variation-settings: 'FILL' 1;">error</span>
+            <span class="font-mono-sm text-mono-sm">Unsaved changes. Sync to update targets.</span>
+        </div>
+    </div>
+
+    <!-- Drawer Header -->
+    <header class="p-container-padding border-b border-outline-variant flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-3 min-w-0">
+            <button class="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors flex-shrink-0" onclick="closeDrawer()">close</button>
+            <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                    <h2 class="font-mono-base text-mono-base font-bold text-primary truncate" id="drawer-title">Agent</h2>
+                    <span class="hidden px-1.5 py-0.5 bg-surface-variant border border-outline-variant text-[10px] font-mono-sm text-on-surface-variant uppercase tracking-wider flex-shrink-0" id="drawer-category"></span>
+                </div>
+                <div class="text-mono-sm text-outline mt-0.5 truncate" id="drawer-path"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Deploy Targets -->
+    <div class="px-container-padding py-2 border-b border-outline-variant bg-surface-container-low flex items-center gap-3 flex-wrap flex-shrink-0" id="drawer-targets-row">
+        <span class="text-label-caps font-label-caps text-outline">TARGETS:</span>
+        <div class="flex items-center gap-3 flex-wrap" id="drawer-targets"></div>
+    </div>
+
+    <!-- Drawer Body -->
+    <div class="flex-1 flex flex-col overflow-hidden" id="drawer-body">
+        <!-- View mode -->
+        <div class="flex-1 overflow-auto p-container-padding" id="drawer-view-mode">
+            <div class="detail-meta grid gap-1 mb-4" id="drawer-meta"></div>
+            <div class="bg-surface-container-lowest border border-outline-variant p-4 font-mono-sm text-mono-sm text-on-surface-variant whitespace-pre-wrap break-words overflow-auto max-h-[400px]" id="drawer-content"></div>
+        </div>
+        <!-- Edit mode -->
+        <div class="hidden flex-1 flex flex-col overflow-hidden" id="drawer-edit-mode">
+            <div class="flex-1 flex divide-x divide-outline-variant overflow-hidden">
+                <!-- Editor pane -->
+                <div class="flex-1 flex flex-col bg-surface-container-lowest overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2 border-b border-outline-variant bg-surface flex-shrink-0">
+                        <span class="text-label-caps font-label-caps text-outline">SOURCE (MARKDOWN)</span>
+                        <span class="text-mono-sm text-outline" id="editor-stat">UTF-8</span>
+                    </div>
+                    <div class="flex-1 overflow-auto p-container-padding" id="edit-form-container"></div>
+                </div>
+                <!-- Preview pane -->
+                <div class="w-1/2 flex flex-col bg-surface overflow-hidden min-w-0" id="preview-pane">
+                    <div class="flex items-center px-2 pt-2 gap-1 border-b border-outline-variant bg-surface-container-low flex-shrink-0" id="preview-tabs"></div>
+                    <div class="flex-1 p-4 overflow-auto bg-surface-container-lowest min-w-0">
+                        <pre class="font-mono-sm text-mono-sm text-on-surface whitespace-pre-wrap break-words min-h-full" id="preview-output">Select a platform to preview.</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Drawer Footer -->
+    <footer class="p-container-padding border-t border-outline-variant bg-surface-container-lowest flex items-center justify-between gap-2 flex-shrink-0" id="drawer-footer"></footer>
+</aside>
+
+<!-- ═══ CONFIRM MODAL ═══ -->
+<div class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-container-padding" id="modal">
+    <div class="w-full max-w-sm bg-surface border border-outline-variant p-6 shadow-2xl">
+        <h3 class="font-headline text-headline text-primary mb-2" id="modal-title"></h3>
+        <p class="text-body-sm text-on-surface-variant mb-4" id="modal-body"></p>
+        <div class="flex justify-end gap-2" id="modal-actions"></div>
+    </div>
+</div>
+
+<!-- ═══ SNACKBAR ═══ -->
+<div class="fixed left-1/2 bottom-6 z-[100] -translate-x-1/2 translate-y-20 transition-transform duration-200 px-4 py-2 bg-surface-container-highest border border-outline text-on-surface font-mono-sm text-mono-sm shadow-2xl pointer-events-none rounded" id="snackbar" aria-live="polite"></div>
+
+<script src="/app.js"></script>
 </body>
 </html>
