@@ -488,7 +488,7 @@ function renderAgentMatrix(filtered) {
             <div class="flex items-center justify-between">
                 <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">${esc(PLATFORM_NAMES[t] || t)}</span>
                 <div class="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button class="hover:text-primary" title="Bulk Toggle" onclick="event.stopPropagation();agentColumnBulk('${esc(t)}')"><span class="material-symbols-outlined !text-[12px]">checklist</span></button>
+                    <button class="hover:text-primary" title="Toggle all agents for this platform" onclick="event.stopPropagation();agentColumnBulk('${esc(t)}')"><span class="material-symbols-outlined !text-[12px]">checklist</span></button>
                 </div>
             </div>
         </th>`;
@@ -966,7 +966,7 @@ function renderSkillMatrix(visible, totalFiltered) {
             <div class="flex items-center justify-between">
                 <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">${esc(PLATFORM_NAMES[t] || t)}</span>
                 <div class="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button class="hover:text-primary" title="Bulk Toggle" onclick="event.stopPropagation();skillColumnBulk('${esc(t)}')"><span class="material-symbols-outlined !text-[12px]">checklist</span></button>
+                    <button class="hover:text-primary" title="Toggle all skills for this platform" onclick="event.stopPropagation();skillColumnBulk('${esc(t)}')"><span class="material-symbols-outlined !text-[12px]">checklist</span></button>
                 </div>
             </div>
         </th>`;
@@ -1072,13 +1072,39 @@ async function skillBulkDisableAll() {
 }
 
 async function skillColumnBulk(platform) {
-    if (selectedSkills.size === 0) { showSnackbar('Select skills first', 3000); return; }
-    await skillBulkToggle(platform, true);
+    if (selectedSkills.size > 0) {
+        await skillBulkToggle(platform, true);
+        return;
+    }
+    const filtered = getFilteredSkills();
+    const allOn = filtered.every(s => resolveTargets(config.skills?.[s.name], knownTargets).includes(platform));
+    const items = filtered.map(s => ({ name: s.name, platform, enable: !allOn }));
+    try {
+        showSnackbar(`${filtered.length} skills: ${PLATFORM_NAMES[platform] || platform} ${!allOn ? 'enabling' : 'disabling'}…`);
+        const res = await api('/api/toggle', { method: 'POST', body: JSON.stringify({ type: 'skill', items }) });
+        if (res.config) { config.skills = res.config.skills || {}; }
+        renderSkillsTable();
+        refreshStatus();
+        showSnackbar(`${filtered.length} skills: ${PLATFORM_NAMES[platform] || platform} ${!allOn ? 'enabled' : 'disabled'}`);
+    } catch (e) { showSnackbar('Failed: ' + e.message, 4000); }
 }
 
 async function agentColumnBulk(platform) {
-    if (selectedAgents.size === 0) { showSnackbar('Select agents first', 3000); return; }
-    await bulkTogglePlatform(platform, true);
+    if (selectedAgents.size > 0) {
+        await bulkTogglePlatform(platform, true);
+        return;
+    }
+    const filtered = getFilteredAgents();
+    const allOn = filtered.every(a => resolveTargets(config.agents?.[a.name], knownTargets).includes(platform));
+    const items = filtered.map(a => ({ name: a.name, platform, enable: !allOn }));
+    try {
+        showSnackbar(`${filtered.length} agents: ${PLATFORM_NAMES[platform] || platform} ${!allOn ? 'enabling' : 'disabling'}…`);
+        const res = await api('/api/toggle', { method: 'POST', body: JSON.stringify({ type: 'agent', items }) });
+        if (res.config) { config.agents = res.config.agents || {}; }
+        renderAgentsTable();
+        refreshStatus();
+        showSnackbar(`${filtered.length} agents: ${PLATFORM_NAMES[platform] || platform} ${!allOn ? 'enabled' : 'disabled'}`);
+    } catch (e) { showSnackbar('Failed: ' + e.message, 4000); }
 }
 
 // Skill drawer
