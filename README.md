@@ -2,7 +2,7 @@
 
 > **Define sub-agents and skills once, inject everywhere.**
 
-![Overview](docs/screenshots/overview.png)
+![Overview](https://github.com/enolalabs/dotagen/blob/main/docs/screenshots/overview.png?raw=true)
 
 `dotagen` is a Go CLI tool that lets you define coding sub-agents and skills **once** in Markdown and automatically distribute them across multiple coding agent platforms (Antigravity, Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, OpenCode, Windsurf).
 
@@ -334,28 +334,28 @@ Starts a web dashboard at `http://localhost:7890` with the following features:
 <details>
 <summary><strong>Overview Dashboard</strong></summary>
 
-![Overview](docs/screenshots/overview.png)
+![Overview](https://github.com/enolalabs/dotagen/blob/main/docs/screenshots/overview.png?raw=true)
 
 </details>
 
 <details>
 <summary><strong>Agent Library (Matrix View)</strong></summary>
 
-![Agent Library](docs/screenshots/agent-library.png)
+![Agent Library](https://github.com/enolalabs/dotagen/blob/main/docs/screenshots/agent-library.png?raw=true)
 
 </details>
 
 <details>
 <summary><strong>Skill Library (Matrix View)</strong></summary>
 
-![Skill Library](docs/screenshots/skill-library.png)
+![Skill Library](https://github.com/enolalabs/dotagen/blob/main/docs/screenshots/skill-library.png?raw=true)
 
 </details>
 
 <details>
 <summary><strong>Symlink Status</strong></summary>
 
-![Status](docs/screenshots/status.png)
+![Status](https://github.com/enolalabs/dotagen/blob/main/docs/screenshots/status.png?raw=true)
 
 </details>
 
