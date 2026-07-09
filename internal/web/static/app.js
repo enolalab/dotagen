@@ -480,7 +480,7 @@ function renderAgentMatrix(filtered) {
     const body = document.getElementById('agent-matrix-body');
 
     let headHtml = '<tr class="bg-surface">';
-    headHtml += `<th class="w-10 h-8 border-b border-r border-outline-variant bg-surface sticky left-0 z-40 px-2"><input type="checkbox" class="agent-cb" id="matrix-select-all" onchange="toggleSelectAll(this.checked)"></th>`;
+    headHtml += `<th class="w-10 h-8 border-b border-r border-outline-variant bg-surface sticky left-0 z-40 px-2"></th>`;
     headHtml += `<th class="w-48 h-8 border-b border-r border-outline-variant px-3 text-left font-label-caps text-on-surface-variant bg-surface sticky left-10 z-40 uppercase">Agent Name</th>`;
     headHtml += `<th class="w-24 h-8 border-b border-r border-outline-variant px-2 text-left font-label-caps text-on-surface-variant bg-surface uppercase">Category</th>`;
     knownTargets.forEach(t => {
@@ -958,7 +958,7 @@ function renderSkillMatrix(visible, totalFiltered) {
     const body = document.getElementById('skill-matrix-body');
 
     let headHtml = '<tr class="bg-surface">';
-    headHtml += `<th class="w-10 h-8 border-b border-r border-outline-variant bg-surface sticky left-0 z-40 px-2"><input type="checkbox" class="agent-cb" id="skill-matrix-select-all" onchange="toggleSkillSelectAll(this.checked)"></th>`;
+    headHtml += `<th class="w-10 h-8 border-b border-r border-outline-variant bg-surface sticky left-0 z-40 px-2"></th>`;
     headHtml += `<th class="w-48 h-8 border-b border-r border-outline-variant px-3 text-left font-label-caps text-on-surface-variant bg-surface sticky left-10 z-40 uppercase">Skill Name</th>`;
     headHtml += `<th class="w-24 h-8 border-b border-r border-outline-variant px-2 text-left font-label-caps text-on-surface-variant bg-surface uppercase">Category</th>`;
     knownTargets.forEach(t => {
