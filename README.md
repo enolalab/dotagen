@@ -61,6 +61,7 @@ Checks for the latest version and self-updates in place.
 ```powershell
 $version = (Invoke-RestMethod "https://api.github.com/repos/enolalabs/dotagen/releases/latest").tag_name
 $url = "https://github.com/enolalabs/dotagen/releases/download/$version/dotagen_$($version.Substring(1))_windows_amd64.exe"
+mkdir "$env:USERPROFILE\bin" -Force -ErrorAction SilentlyContinue
 Invoke-WebRequest $url -OutFile "$env:USERPROFILE\bin\dotagen.exe"
 ```
 

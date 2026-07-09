@@ -78,6 +78,8 @@ for dir in $(echo "$INSTALL_PATHS" | tr ':' ' '); do
         INSTALL_DIR="$dir"
         break
     fi
+    # Try to create the directory if it doesn't exist
+    mkdir -p "$dir" 2>/dev/null && INSTALL_DIR="$dir" && break
 done
 
 if [ -z "$INSTALL_DIR" ]; then
