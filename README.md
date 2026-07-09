@@ -2,11 +2,11 @@
 
 > **Define sub-agents and skills once, inject everywhere.**
 
+![Overview](docs/screenshots/overview.png)
+
 `dotagen` is a Go CLI tool that lets you define coding sub-agents and skills **once** in Markdown and automatically distribute them across multiple coding agent platforms (Antigravity, Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, OpenCode, Windsurf).
 
 Instead of writing and maintaining N sets of configurations for N platforms, you manage **a single source of truth** in `.dotagen/` — dotagen renders each agent/skill to the correct platform format and creates symlinks automatically.
-
-![Overview](docs/screenshots/overview.png)
 
 ## Why dotagen?
 
