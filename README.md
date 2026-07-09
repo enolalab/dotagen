@@ -6,6 +6,8 @@
 
 Instead of writing and maintaining N sets of configurations for N platforms, you manage **a single source of truth** in `.dotagen/` — dotagen renders each agent/skill to the correct platform format and creates symlinks automatically.
 
+![Overview](docs/screenshots/overview.png)
+
 ## Why dotagen?
 
 | Problem | Solution |
@@ -320,12 +322,42 @@ dotagen serve
 
 Starts a web dashboard at `http://localhost:7890` with the following features:
 
-- **Agent Management** — CRUD agents directly from the UI
-- **Skill Management** — CRUD skills with multi-category dropdown
-- **Target Matrix** — Assign/unassign agents and skills to platforms via toggle
+- **Overview** — Stats, category distribution, platform health, symlink status
+- **Agent Library** — Matrix view: toggle agents across 8 platforms, bulk column toggle
+- **Skill Library** — Matrix view: toggle 768 skills across 8 platforms, filter by category/vendor
+- **Status** — View all symlinks (agents + skills) with type badges, Fix Broken button
 - **Preview** — View rendered output for each platform
-- **Sync/Clean** — Trigger sync or clean from the web UI (applies to both agents and skills)
-- **Status** — View status of all symlinks
+- **Clean / Reinit** — Remove all symlinks or reinitialize from built-in library
+
+### Screenshots
+
+<details>
+<summary><strong>Overview Dashboard</strong></summary>
+
+![Overview](docs/screenshots/overview.png)
+
+</details>
+
+<details>
+<summary><strong>Agent Library (Matrix View)</strong></summary>
+
+![Agent Library](docs/screenshots/agent-library.png)
+
+</details>
+
+<details>
+<summary><strong>Skill Library (Matrix View)</strong></summary>
+
+![Skill Library](docs/screenshots/skill-library.png)
+
+</details>
+
+<details>
+<summary><strong>Symlink Status</strong></summary>
+
+![Status](docs/screenshots/status.png)
+
+</details>
 
 ### REST API
 
