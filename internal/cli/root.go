@@ -16,8 +16,23 @@ var rootCmd = &cobra.Command{
 	Long: `dotagen — A CLI tool that lets you define coding sub-agents
 in markdown and inject them into multiple coding agent platforms.
 
-Supported platforms: Antigravity, Claude Code, Gemini CLI, OpenCode`,
+Supported platforms: Antigravity, Claude Code, Codex, Cursor,
+Gemini CLI, GitHub Copilot, OpenCode, Windsurf`,
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		skip := map[string]bool{
+			"init":      true,
+			"version":   true,
+			"help":      true,
+			"completion": true,
+		}
+		if skip[cmd.Name()] {
+			return nil
+		}
+		autoInitIfNeeded()
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
+		autoInitIfNeeded()
 		fmt.Println(banner())
 		cmd.Help()
 	},
@@ -31,7 +46,7 @@ var versionCmd = &cobra.Command{
 		fmt.Printf("dotagen v%s\n", version)
 		fmt.Printf("  go:      %s\n", runtime.Version())
 		fmt.Printf("  os/arch: %s/%s\n", runtime.GOOS, runtime.GOARCH)
-		fmt.Printf("  platforms: antigravity, claude-code, gemini-cli, opencode\n")
+		fmt.Printf("  platforms: antigravity, claude-code, codex, cursor, gemini-cli, github-copilot, opencode, windsurf\n")
 	},
 }
 

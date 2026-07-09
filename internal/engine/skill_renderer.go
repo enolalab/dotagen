@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/enolalabs/dotagen/v2/internal/config"
 	"github.com/enolalabs/dotagen/v2/internal/skill"
@@ -86,31 +87,19 @@ func (r *Renderer) RenderAllSkills(skills []skill.Skill, cfg *config.Config, dot
 
 // FindDotagenSkillSymlinks finds all dotagen-managed skill symlinks in platform directories.
 func FindDotagenSkillSymlinks(projectDir string, dotgenDir string) ([]SymlinkInfo, error) {
-	type skillDirEntry struct {
-		dir      string
-		platform string
-	}
-	entries := []skillDirEntry{
-		{config.AntigravitySkillPath, "antigravity"},
-		{config.ClaudeCodeSkillPath, "claude-code"},
-		{config.CodexSkillPath, "codex"},
-		{config.GeminiCliSkillPath, "gemini-cli"},
-		{config.OpenCodeSkillPath, "opencode"},
-	}
-
-	// Deduplicate directories — if multiple platforms share a path, use the first one
-	seen := make(map[string]bool)
-	var skillDirs []skillDirEntry
-	for _, e := range entries {
-		if !seen[e.dir] {
-			seen[e.dir] = true
-			skillDirs = append(skillDirs, e)
-		}
+	skillDirs := map[string]string{
+		config.AntigravitySkillPath: "antigravity",
+		config.ClaudeCodeSkillPath:  "claude-code",
+		config.CodexSkillPath:       "codex",
+		config.GeminiCliSkillPath:   "gemini-cli",
+		config.OpenCodeSkillPath:    "opencode",
+		config.CursorSkillPath:      "cursor",
+		config.CopilotSkillPath:     "github-copilot",
+		config.WindsurfSkillPath:    "windsurf",
 	}
 
 	var links []SymlinkInfo
-	for _, entry := range skillDirs {
-		dir, plat := entry.dir, entry.platform
+	for dir, plat := range skillDirs {
 		fullDir := filepath.Join(projectDir, dir)
 		entries, err := os.ReadDir(fullDir)
 		if err != nil {
@@ -118,68 +107,36 @@ func FindDotagenSkillSymlinks(projectDir string, dotgenDir string) ([]SymlinkInf
 		}
 		for _, entry := range entries {
 			name := entry.Name()
-			if !entry.IsDir() {
-				// Could be a symlink to a directory
-				fullPath := filepath.Join(fullDir, name)
-				isLink, err := IsSymlink(fullPath)
-				if err != nil || !isLink {
-					continue
-				}
-				if !hasDotagenSkillPrefix(name) {
-					continue
-				}
-				target, err := os.Readlink(fullPath)
-				if err != nil {
-					continue
-				}
-				resolvedTarget := target
-				if !filepath.IsAbs(resolvedTarget) {
-					resolvedTarget = filepath.Join(filepath.Dir(fullPath), resolvedTarget)
-				}
-				broken := false
-				if _, err := os.Stat(resolvedTarget); err != nil {
-					broken = true
-				}
-				links = append(links, SymlinkInfo{
-					Path:     fullPath,
-					Target:   target,
-					Agent:    name,
-					Platform: plat,
-					Broken:   broken,
-				})
-			} else {
-				// Check if it's a symlinked directory
-				fullPath := filepath.Join(fullDir, name)
-				isLink, err := IsSymlink(fullPath)
-				if err != nil || !isLink {
-					continue
-				}
-				if !hasDotagenSkillPrefix(name) {
-					continue
-				}
-				target, err := os.Readlink(fullPath)
-				if err != nil {
-					continue
-				}
-				broken := false
-				if _, err := os.Stat(target); err != nil {
-					broken = true
-				}
-				links = append(links, SymlinkInfo{
-					Path:     fullPath,
-					Target:   target,
-					Agent:    name,
-					Platform: plat,
-					Broken:   broken,
-				})
+			fullPath := filepath.Join(fullDir, name)
+			isLink, err := IsSymlink(fullPath)
+			if err != nil || !isLink {
+				continue
 			}
+			if !strings.HasPrefix(name, "dotagent-") && !strings.HasPrefix(name, "ds-") {
+				continue
+			}
+			target, err := os.Readlink(fullPath)
+			if err != nil {
+				continue
+			}
+			resolvedTarget := target
+			if !filepath.IsAbs(resolvedTarget) {
+				resolvedTarget = filepath.Join(filepath.Dir(fullPath), resolvedTarget)
+			}
+			broken := false
+			if _, err := os.Stat(resolvedTarget); err != nil {
+				broken = true
+			}
+			links = append(links, SymlinkInfo{
+				Path:     fullPath,
+				Target:   target,
+				Agent:    name,
+				Platform: plat,
+				Broken:   broken,
+			})
 		}
 	}
 	return links, nil
-}
-
-func hasDotagenSkillPrefix(name string) bool {
-	return len(name) > 3 && name[:3] == "ds-"
 }
 
 // RemoveStaleSkillSymlinks removes skill symlinks that are no longer active.

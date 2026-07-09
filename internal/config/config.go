@@ -14,15 +14,21 @@ const CodexRootPath = ".codex/agents"
 const GeminiCliRootPath = ".gemini/agents"
 const OpenCodeRootPath = ".config/opencode/agents"
 const AntigravityRootPath = ".agents"
+const CursorRootPath = ".cursor/rules"
+const CopilotRootPath = ".github/agents"
+const WindsurfRootPath = ".windsurf/rules"
 
 const ClaudeCodeSkillPath = ".claude/skills"
-const CodexSkillPath = ".codex/skills"
-const GeminiCliSkillPath = ".agents/skills"
+const CodexSkillPath = ".agents/skills"
+const GeminiCliSkillPath = ".gemini/skills"
 const OpenCodeSkillPath = ".opencode/skills"
-const AntigravitySkillPath = ".agents/skills"
+const AntigravitySkillPath = ".agent/skills"
+const CursorSkillPath = ".cursor/skills"
+const CopilotSkillPath = ".github/skills"
+const WindsurfSkillPath = ".windsurf/skills"
 const AntigravityGlobalWorkflowsPath = ".gemini/antigravity/global_workflows"
 
-var ValidTargets = []string{"antigravity", "claude-code", "codex", "gemini-cli", "opencode"}
+var ValidTargets = []string{"antigravity", "claude-code", "codex", "cursor", "gemini-cli", "github-copilot", "opencode", "windsurf"}
 
 type StringOrSlice []string
 
@@ -221,8 +227,11 @@ func DetectPlatforms(homeDir string) []string {
 		AntigravityRootPath: "antigravity",
 		ClaudeCodeRootPath:  "claude-code",
 		CodexRootPath:       "codex",
+		CursorRootPath:      "cursor",
 		GeminiCliRootPath:   "gemini-cli",
+		CopilotRootPath:     "github-copilot",
 		OpenCodeRootPath:    "opencode",
+		WindsurfRootPath:    "windsurf",
 	}
 	for dir, platform := range checks {
 		if _, err := os.Stat(filepath.Join(homeDir, dir)); err == nil {

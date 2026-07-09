@@ -288,6 +288,16 @@ select:focus { border-color: #ffffff; }
 .lib-row.row-selected { background: rgba(255,255,255,0.04); }
 .lib-row.row-selected:hover { background: rgba(255,255,255,0.06); }
 
+/* ── Matrix view ── */
+.matrix-container::-webkit-scrollbar { width: 6px; height: 6px; }
+.matrix-container::-webkit-scrollbar-track { background: #131315; }
+.matrix-container::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+.matrix-container::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+.matrix-cell-focus:focus-within { outline: 1px solid #ffffff; z-index: 10; }
+.matrix-row:hover td { background: #18181b !important; }
+.matrix-sticky { background: #131315; }
+
 /* ── Animations ── */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .fade-in { animation: fadeIn 150ms ease; }

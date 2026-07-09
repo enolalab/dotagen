@@ -10,7 +10,7 @@ import (
 
 func TestRegistry(t *testing.T) {
 	r := NewRegistry()
-	assert.Equal(t, 5, len(r.List()))
+	assert.Equal(t, 8, len(r.List()))
 
 	_, err := r.Get("claude-code")
 	assert.NoError(t, err)
@@ -53,7 +53,7 @@ func TestCodexAdapterSkillAdapter(t *testing.T) {
 	var _ SkillAdapter = a
 
 	assert.Equal(t, "codex/skills/ds-my-skill", a.SkillOutputDir("ds-my-skill"))
-	assert.Equal(t, ".codex/skills/ds-my-skill", a.SkillSymlinkDir("ds-my-skill"))
+	assert.Equal(t, ".agents/skills/ds-my-skill", a.SkillSymlinkDir("ds-my-skill"))
 }
 
 
@@ -106,6 +106,6 @@ func TestAntigravityAdapterSkillAdapter(t *testing.T) {
 	var _ SkillAdapter = a
 
 	assert.Equal(t, "antigravity/skills/ds-my-skill", a.SkillOutputDir("ds-my-skill"))
-	assert.Equal(t, ".agents/skills/ds-my-skill", a.SkillSymlinkDir("ds-my-skill"))
+	assert.Equal(t, ".agent/skills/ds-my-skill", a.SkillSymlinkDir("ds-my-skill"))
 }
 

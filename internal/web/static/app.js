@@ -13,35 +13,48 @@ let currentView = 'overview';
 let searchQuery = '';
 let categoryFilter = 'all';
 let skillCategoryFilter = 'all';
+let skillVendorFilter = 'all';
 let statusFilter = 'all';
-let libraryView = 'list';
+let libraryView = 'matrix';
 let drawerMode = null;
 let drawerAgent = null;
 let selectedAgents = new Set();
 let selectedSkills = new Set();
+let skillPage = 1;
+let agentPage = 1;
+const PAGE_SIZE = 50;
 
 const PLATFORM_LABELS = {
     'antigravity': 'AG',
     'claude-code': 'CC',
     'codex': 'CX',
+    'cursor': 'CR',
     'gemini-cli': 'GC',
+    'github-copilot': 'CP',
     'opencode': 'OC',
+    'windsurf': 'WS',
 };
 
 const PLATFORM_NAMES = {
     'antigravity': 'Antigravity',
     'claude-code': 'Claude Code',
     'codex': 'Codex',
+    'cursor': 'Cursor',
     'gemini-cli': 'Gemini CLI',
+    'github-copilot': 'GitHub Copilot',
     'opencode': 'OpenCode',
+    'windsurf': 'Windsurf',
 };
 
 const PLATFORM_ICONS = {
     'antigravity': 'rocket_launch',
     'claude-code': 'psychology',
     'codex': 'code',
+    'cursor': 'ads_click',
     'gemini-cli': 'auto_awesome',
+    'github-copilot': 'group',
     'opencode': 'data_object',
+    'windsurf': 'air',
 };
 
 function catLabel(cat) {
@@ -56,6 +69,20 @@ function catLabel(cat) {
         'business-product': 'Business',
         'meta-orchestration': 'Orchestration',
         'research-analysis': 'Research',
+        'Developer Tools': 'Dev Tools',
+        'Product & Strategy': 'Product',
+        'AI & Machine Learning': 'AI/ML',
+        'Testing & QA': 'Testing',
+        'Cloud & Infrastructure': 'Cloud',
+        'Backend & APIs': 'Backend',
+        'DevOps & Monitoring': 'DevOps',
+        'Databases & Data': 'Data',
+        'Frontend & UI': 'Frontend',
+        'Productivity & Collaboration': 'Productivity',
+        'Security': 'Security',
+        'Documents & Content': 'Documents',
+        'Search & Web': 'Search',
+        'Mobile & Desktop': 'Mobile',
     };
     return labels[cat] || cat || '—';
 }
@@ -74,10 +101,26 @@ function skillCategories(s) {
     return (s.categories && s.categories.length) ? s.categories : (s.category ? s.category.split(',').map(c => c.trim()).filter(Boolean) : []);
 }
 
+function skillVendor(s) {
+    return s.frontmatter?.vendor || '';
+}
+
+function allSkillVendors() {
+    const s = new Set();
+    skills.forEach(sk => { const v = skillVendor(sk); if (v) s.add(v); });
+    return [...s].sort();
+}
+
 function allSkillCategories() {
     const s = new Set();
     skills.forEach(sk => skillCategories(sk).forEach(c => s.add(c)));
     return [...s].sort();
+}
+
+function shortName(fullName) {
+    const parts = fullName.split('-');
+    if (parts[0] === 'dotagent' && parts.length > 2) return parts.slice(2).join('-');
+    return fullName;
 }
 
 function resolveTargets(entry, platforms) {
@@ -183,6 +226,17 @@ async function loadAll() {
     } catch (e) {
         showSnackbar('Failed to load data: ' + e.message, 5000);
     }
+}
+
+async function refreshStatus() {
+    try {
+        const s = await api('/api/status');
+        statusLinks = (s && s.symlinks) || [];
+        updateNavBadges();
+        updateFooter();
+        if (currentView === 'overview') renderOverview();
+        if (currentView === 'status') { renderStatusFilters(); renderStatusList(); }
+    } catch (e) { /* silent */ }
 }
 
 function updateNavBadges() {
@@ -311,7 +365,7 @@ function renderOverviewPlatforms() {
 function renderOverviewRecent() {
     const container = document.getElementById('overview-recent');
     if (statusLinks.length === 0) {
-        container.innerHTML = '<tr><td colspan="4" class="px-4 py-8 text-center text-on-surface-variant">No symlinks. Run sync to generate files.</td></tr>';
+        container.innerHTML = '<tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">No symlinks. Toggle a platform to get started.</td></tr>';
         return;
     }
 
@@ -322,6 +376,7 @@ function renderOverviewRecent() {
             : '<span class="text-emerald-500 font-bold">SYNCED</span>';
         return `<tr class="hover:bg-surface-container-low transition-colors cursor-pointer" onclick="switchView('status')">
             <td class="px-4 py-2 text-primary">${esc(l.agent)}</td>
+            <td class="px-4 py-2"><span class="px-1.5 py-0.5 border border-outline-variant bg-surface-variant text-[10px] uppercase">${esc(l.type || 'agent')}</span></td>
             <td class="px-4 py-2"><span class="px-1.5 py-0.5 border border-outline-variant bg-surface-variant text-[10px]">${esc((PLATFORM_NAMES[l.platform] || l.platform).toUpperCase())}</span></td>
             <td class="px-4 py-2 text-outline truncate max-w-[200px]">${esc(l.path)}</td>
             <td class="px-4 py-2 text-right">${statusHtml}</td>
@@ -364,11 +419,12 @@ function renderAgentFilters() {
     container.innerHTML = html;
 
     const bulkContainer = document.getElementById('agent-bulk-actions');
-    bulkContainer.innerHTML = `<button class="bulk-btn" onclick="selectedAgents.size > 0 && bulkSync()">SYNC</button>`;
+    bulkContainer.innerHTML = '';
 }
 
 function setCategory(cat) {
     categoryFilter = cat;
+    agentPage = 1;
     renderAgentFilters();
     renderAgentsTable();
 }
@@ -394,16 +450,13 @@ function getFilteredAgents() {
 
 function renderAgentsTable() {
     const filtered = getFilteredAgents();
-    const tbody = document.getElementById('agent-tbody');
     const empty = document.getElementById('agent-empty');
-    const listView = document.getElementById('agent-list-view');
     const matrixView = document.getElementById('agent-matrix-view');
     const countEl = document.getElementById('agent-count');
 
     if (agents.length === 0) {
         empty.classList.remove('hidden');
         empty.classList.add('flex');
-        listView.classList.add('hidden');
         matrixView.classList.add('hidden');
         countEl.textContent = '';
         return;
@@ -412,51 +465,14 @@ function renderAgentsTable() {
     empty.classList.remove('flex');
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant">No agents match your filters.</td></tr>';
         countEl.textContent = '0 of ' + agents.length;
         return;
     }
 
     countEl.textContent = `${filtered.length} of ${agents.length} agents`;
-
-    if (libraryView === 'matrix') {
-        listView.classList.add('hidden');
-        matrixView.classList.remove('hidden');
-        renderAgentMatrix(filtered);
-        return;
-    }
-    matrixView.classList.add('hidden');
-    listView.classList.remove('hidden');
-
-    tbody.innerHTML = filtered.map(a => {
-        const entry = config.agents?.[a.name];
-        const active = resolveTargets(entry, knownTargets);
-        const checked = selectedAgents.has(a.name);
-
-        const dots = knownTargets.map(t => {
-            const on = active.includes(t);
-            const label = PLATFORM_LABELS[t] || t.slice(0, 2).toUpperCase();
-            return `<button class="pdot ${on ? 'pdot-on' : 'pdot-off'}" data-platform="${esc(t)}" title="${on ? 'Disable' : 'Enable'} ${esc(PLATFORM_NAMES[t] || t)}" onclick="event.stopPropagation();togglePlatform('${esc(a.name)}','${esc(t)}',${!on})">${label}</button>`;
-        }).join('');
-
-        const cats = agentCategories(a);
-        const catBadges = cats.length
-            ? cats.slice(0, 2).map(c => `<span class="cat-badge">${esc(catLabel(c))}</span>`).join(' ')
-            : '<span class="cat-badge">—</span>';
-
-        return `<tr class="lib-row ${checked ? 'row-selected' : ''}" onclick="viewAgent('${esc(a.name)}')">
-            <td class="px-4 py-1.5" onclick="event.stopPropagation()"><input type="checkbox" class="agent-cb" ${checked ? 'checked' : ''} onchange="toggleAgentSelect('${esc(a.name)}', this.checked)"></td>
-            <td class="px-4 py-1.5 text-primary font-bold">${esc(a.name)}</td>
-            <td class="px-4 py-1.5 text-on-surface-variant" title="${esc(a.description || '')}">${esc(truncate(a.description, 60))}</td>
-            <td class="px-4 py-1.5">${catBadges}</td>
-            <td class="px-4 py-1.5"><div class="flex gap-1">${dots}</div></td>
-            <td class="px-2 py-1.5"><button class="text-on-surface-variant hover:text-primary transition-colors" title="Edit" onclick="event.stopPropagation();editAgent('${esc(a.name)}')"><span class="material-symbols-outlined !text-[16px]">edit</span></button></td>
-        </tr>`;
-    }).join('');
-
+    matrixView.classList.remove('hidden');
+    renderAgentMatrix(filtered);
     updateAgentBulkBar();
-    const selectAll = document.getElementById('agent-select-all');
-    if (selectAll) selectAll.checked = filtered.length > 0 && filtered.every(a => selectedAgents.has(a.name));
 }
 
 function renderAgentMatrix(filtered) {
@@ -464,14 +480,16 @@ function renderAgentMatrix(filtered) {
     const body = document.getElementById('agent-matrix-body');
 
     let headHtml = '<tr class="bg-surface">';
-    headHtml += `<th class="w-10 h-8 border-b border-r border-outline-variant bg-surface sticky left-0 z-10 px-2"><input type="checkbox" class="agent-cb" id="matrix-select-all" onchange="toggleSelectAll(this.checked)"></th>`;
-    headHtml += `<th class="w-48 h-8 border-b border-r border-outline-variant px-3 text-left font-label-caps text-on-surface-variant bg-surface uppercase">Agent</th>`;
-    headHtml += `<th class="w-28 h-8 border-b border-r border-outline-variant px-3 text-left font-label-caps text-on-surface-variant bg-surface uppercase">Category</th>`;
+    headHtml += `<th class="w-10 h-8 border-b border-r border-outline-variant bg-surface sticky left-0 z-40 px-2"><input type="checkbox" class="agent-cb" id="matrix-select-all" onchange="toggleSelectAll(this.checked)"></th>`;
+    headHtml += `<th class="w-48 h-8 border-b border-r border-outline-variant px-3 text-left font-label-caps text-on-surface-variant bg-surface sticky left-10 z-40 uppercase">Agent Name</th>`;
+    headHtml += `<th class="w-24 h-8 border-b border-r border-outline-variant px-2 text-left font-label-caps text-on-surface-variant bg-surface uppercase">Category</th>`;
     knownTargets.forEach(t => {
-        headHtml += `<th class="h-8 border-b border-r border-outline-variant px-3 bg-surface min-w-[80px]">
+        headHtml += `<th class="h-8 border-b border-r border-outline-variant px-2 bg-surface group">
             <div class="flex items-center justify-between">
-                <span class="font-label-caps text-on-surface-variant uppercase">${esc(PLATFORM_LABELS[t] || t)}</span>
-                <button class="hover:text-primary" title="Sync ${esc(PLATFORM_NAMES[t] || t)}" onclick="syncTarget('${esc(t)}')"><span class="material-symbols-outlined !text-[14px]">refresh</span></button>
+                <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">${esc(PLATFORM_NAMES[t] || t)}</span>
+                <div class="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button class="hover:text-primary" title="Bulk Toggle" onclick="event.stopPropagation();agentColumnBulk('${esc(t)}')"><span class="material-symbols-outlined !text-[12px]">checklist</span></button>
+                </div>
             </div>
         </th>`;
     });
@@ -490,59 +508,35 @@ function renderAgentMatrix(filtered) {
             const platformLinks = statusLinks.filter(l => l.agent === a.name && l.platform === t);
             const broken = platformLinks.some(l => l.broken);
 
-            let icon, color, label;
-            if (!on) { icon = 'remove'; color = 'text-on-surface-variant opacity-20'; label = 'Off'; }
-            else if (broken) { icon = 'error'; color = 'text-red-400'; label = 'Broken'; }
-            else { icon = 'check_circle'; color = 'text-emerald-500'; label = 'Synced'; }
+            let icon, color, fill, label;
+            if (!on) { icon = 'remove'; color = 'text-on-surface-variant opacity-20'; fill = false; label = 'Off'; }
+            else if (broken) { icon = 'error'; color = 'text-red-400'; fill = true; label = 'Broken'; }
+            else { icon = 'check_circle'; color = 'text-emerald-500'; fill = true; label = 'Synced'; }
 
-            return `<td class="border-b border-r border-outline-variant px-3 text-center h-8">
-                <div class="flex items-center justify-center gap-1.5 cursor-pointer" onclick="event.stopPropagation();togglePlatform('${esc(a.name)}','${esc(t)}',${!on})">
-                    <span class="material-symbols-outlined matrix-cell-icon ${color}" ${on && !broken ? "style='font-variation-settings: \"FILL\" 1;'" : ''}>${icon}</span>
+            return `<td class="border-b border-r border-outline-variant px-2 matrix-cell-focus group" tabindex="0">
+                <div class="flex items-center justify-center cursor-pointer" onclick="event.stopPropagation();togglePlatform('${esc(a.name)}','${esc(t)}',${!on})">
+                    <span class="material-symbols-outlined matrix-cell-icon ${color}" ${fill ? "style='font-variation-settings: \"FILL\" 1;'" : ''}>${icon}</span>
                 </div>
             </td>`;
         }).join('');
 
-        return `<tr class="lib-row h-8 ${checked ? 'row-selected' : ''}" onclick="viewAgent('${esc(a.name)}')">
-            <td class="border-b border-r border-outline-variant text-center sticky left-0 bg-surface" onclick="event.stopPropagation()"><input type="checkbox" class="agent-cb" ${checked ? 'checked' : ''} onchange="toggleAgentSelect('${esc(a.name)}', this.checked)"></td>
-            <td class="border-b border-r border-outline-variant px-3 text-primary font-bold">${esc(a.name)}</td>
-            <td class="border-b border-r border-outline-variant px-3 text-on-surface-variant text-[11px]">${catText}</td>
+        return `<tr class="lib-row h-8 matrix-row ${checked ? 'row-selected' : ''}" onclick="viewAgent('${esc(a.name)}')">
+            <td class="border-b border-r border-outline-variant text-center sticky left-0 matrix-sticky" onclick="event.stopPropagation()"><input type="checkbox" class="agent-cb" ${checked ? 'checked' : ''} onchange="toggleAgentSelect('${esc(a.name)}', this.checked)"></td>
+            <td class="border-b border-r border-outline-variant px-3 text-primary font-bold sticky left-10 matrix-sticky" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(a.name)}">${esc(shortName(a.name))}</td>
+            <td class="border-b border-r border-outline-variant px-2 text-on-surface-variant italic text-[11px]" style="opacity:.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${catText}</td>
             ${cells}
         </tr>`;
     }).join('');
 }
 
-function setLibraryView(mode) {
-    libraryView = mode;
-    const listBtn = document.getElementById('agent-list-btn');
-    const matrixBtn = document.getElementById('agent-matrix-btn');
-    if (mode === 'list') {
-        listBtn.classList.add('active', 'bg-surface-container-high', 'text-primary');
-        listBtn.classList.remove('text-on-surface-variant');
-        matrixBtn.classList.remove('active', 'bg-surface-container-high', 'text-primary');
-        matrixBtn.classList.add('text-on-surface-variant');
-    } else {
-        matrixBtn.classList.add('active', 'bg-surface-container-high', 'text-primary');
-        matrixBtn.classList.remove('text-on-surface-variant');
-        listBtn.classList.remove('active', 'bg-surface-container-high', 'text-primary');
-        listBtn.classList.add('text-on-surface-variant');
-    }
-    renderAgentsTable();
-}
-
 // ── Platform toggle ──
 async function togglePlatform(agentName, platform, enable) {
-    const agentsMap = JSON.parse(JSON.stringify(config.agents || {}));
-    const entry = agentsMap[agentName] || { targets: [], disabled: false };
-    let current = resolveTargets(entry, knownTargets);
-    if (enable) { if (!current.includes(platform)) current.push(platform); }
-    else { current = current.filter(t => t !== platform); }
-    entry.targets = current; entry.disabled = false;
-    agentsMap[agentName] = entry;
     try {
-        await api('/api/config', { method: 'PUT', body: JSON.stringify({ targets: config.targets, agents: agentsMap }) });
-        config.agents = agentsMap;
+        const res = await api('/api/toggle', { method: 'POST', body: JSON.stringify({ type: 'agent', items: [{ name: agentName, platform, enable }] }) });
+        if (res.config) { config.agents = res.config.agents || {}; config.skills = res.config.skills || {}; }
         renderAgentsTable();
-        showSnackbar(`${agentName}: ${PLATFORM_NAMES[platform] || platform} ${enable ? 'enabled' : 'disabled'}`);
+        refreshStatus();
+        showSnackbar(`${shortName(agentName)}: ${PLATFORM_NAMES[platform] || platform} ${enable ? 'enabled' : 'disabled'}`);
     } catch (e) { showSnackbar('Failed: ' + e.message, 4000); }
 }
 
@@ -573,44 +567,38 @@ function updateAgentBulkBar() {
 }
 
 async function bulkTogglePlatform(platform, enable) {
-    const agentsMap = JSON.parse(JSON.stringify(config.agents || {}));
-    for (const name of selectedAgents) {
-        const entry = agentsMap[name] || { targets: [], disabled: false };
-        let current = resolveTargets(entry, knownTargets);
-        if (enable) { if (!current.includes(platform)) current.push(platform); }
-        else { current = current.filter(t => t !== platform); }
-        entry.targets = current; entry.disabled = false;
-        agentsMap[name] = entry;
-    }
+    const items = [...selectedAgents].map(name => ({ name, platform, enable }));
     try {
-        await api('/api/config', { method: 'PUT', body: JSON.stringify({ targets: config.targets, agents: agentsMap }) });
-        config.agents = agentsMap;
+        const res = await api('/api/toggle', { method: 'POST', body: JSON.stringify({ type: 'agent', items }) });
+        if (res.config) { config.agents = res.config.agents || {}; }
         renderAgentsTable();
+        refreshStatus();
         showSnackbar(`${selectedAgents.size} agents: ${PLATFORM_NAMES[platform] || platform} ${enable ? 'enabled' : 'disabled'}`);
     } catch (e) { showSnackbar('Bulk failed: ' + e.message, 4000); }
 }
 
 async function bulkEnableAll() {
-    const m = JSON.parse(JSON.stringify(config.agents || {}));
-    for (const name of selectedAgents) { const e = m[name] || {}; e.targets = [...knownTargets]; e.disabled = false; m[name] = e; }
-    try { await api('/api/config', { method: 'PUT', body: JSON.stringify({ targets: config.targets, agents: m }) }); config.agents = m; renderAgentsTable(); showSnackbar(`${selectedAgents.size} agents: all platforms enabled`); } catch (e) { showSnackbar('Failed: ' + e.message, 4000); }
+    const items = [];
+    for (const name of selectedAgents) for (const t of knownTargets) items.push({ name, platform: t, enable: true });
+    try {
+        const res = await api('/api/toggle', { method: 'POST', body: JSON.stringify({ type: 'agent', items }) });
+        if (res.config) { config.agents = res.config.agents || {}; }
+        renderAgentsTable();
+        refreshStatus();
+        showSnackbar(`${selectedAgents.size} agents: all platforms enabled`);
+    } catch (e) { showSnackbar('Failed: ' + e.message, 4000); }
 }
 
 async function bulkDisableAll() {
-    const m = JSON.parse(JSON.stringify(config.agents || {}));
-    for (const name of selectedAgents) { const e = m[name] || {}; e.targets = []; e.disabled = false; m[name] = e; }
-    try { await api('/api/config', { method: 'PUT', body: JSON.stringify({ targets: config.targets, agents: m }) }); config.agents = m; renderAgentsTable(); showSnackbar(`${selectedAgents.size} agents: all platforms disabled`); } catch (e) { showSnackbar('Failed: ' + e.message, 4000); }
-}
-
-async function bulkSync() {
-    const ok = await showConfirm('Sync all agents?', 'Generate platform-specific files for all enabled agents.');
-    if (!ok) return;
+    const items = [];
+    for (const name of selectedAgents) for (const t of knownTargets) items.push({ name, platform: t, enable: false });
     try {
-        const res = await api('/api/sync', { method: 'POST' });
-        showSnackbar(`Synced ${res.agentsSynced || 0} agent(s) and ${res.skillsSynced || 0} skill(s)`);
-        await loadAll();
+        const res = await api('/api/toggle', { method: 'POST', body: JSON.stringify({ type: 'agent', items }) });
+        if (res.config) { config.agents = res.config.agents || {}; }
         renderAgentsTable();
-    } catch (e) { showSnackbar('Sync failed: ' + e.message, 5000); }
+        refreshStatus();
+        showSnackbar(`${selectedAgents.size} agents: all platforms disabled`);
+    } catch (e) { showSnackbar('Failed: ' + e.message, 4000); }
 }
 
 // ═══════════════════════════════════
@@ -877,15 +865,6 @@ async function loadSkills() {
     await loadAll();
     renderSkillFilters();
     renderSkillsTable();
-    renderSkillPlatformHeader();
-}
-
-function renderSkillPlatformHeader() {
-    const th = document.getElementById('skill-platform-header');
-    if (!th || knownTargets.length === 0) return;
-    th.innerHTML = knownTargets.map(t =>
-        `<span title="${esc(PLATFORM_NAMES[t] || t)}" style="display:inline-block;padding:0 4px;font-size:10px">${esc(PLATFORM_LABELS[t] || t)}</span>`
-    ).join('');
 }
 
 function renderSkillFilters() {
@@ -898,13 +877,37 @@ function renderSkillFilters() {
     const container = document.getElementById('skill-filters');
     let html = `<span class="text-[10px] font-label-caps text-on-surface-variant">FILTER:</span>`;
     html += `<button class="filter-chip ${skillCategoryFilter === 'all' ? 'active' : ''}" onclick="setSkillCategory('all')">All</button>`;
-    Object.entries(counts).sort((a, b) => b[1] - a[1]).forEach(([cat, n]) => {
+    const sortedCats = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    sortedCats.slice(0, 10).forEach(([cat, n]) => {
         html += `<button class="filter-chip ${skillCategoryFilter === cat ? 'active' : ''}" onclick="setSkillCategory('${esc(cat)}')">${esc(catLabel(cat))} <span style="opacity:.5">${n}</span></button>`;
     });
+    if (sortedCats.length > 10) {
+        html += `<select class="filter-chip" style="background:transparent;border:1px solid var(--c-outline-variant);color:var(--c-on-surface-variant);font-size:11px;padding:2px 6px;cursor:pointer" onchange="setSkillCategory(this.value);this.value=''"><option value="">More…</option>`;
+        sortedCats.slice(10).forEach(([cat, n]) => {
+            html += `<option value="${esc(cat)}">${esc(catLabel(cat))} (${n})</option>`;
+        });
+        html += `</select>`;
+    }
+
+    const vendorContainer = document.getElementById('skill-vendor-filter');
+    if (vendorContainer) {
+        const vendors = allSkillVendors();
+        let vh = `<select class="filter-chip" style="background:transparent;border:1px solid var(--c-outline-variant);color:var(--c-on-surface-variant);font-size:11px;padding:2px 6px;cursor:pointer" onchange="setSkillVendor(this.value)">`;
+        vh += `<option value="all" ${skillVendorFilter === 'all' ? 'selected' : ''}>All Vendors (${skills.length})</option>`;
+        const vendorCounts = {};
+        skills.forEach(sk => { const v = skillVendor(sk); if (v) vendorCounts[v] = (vendorCounts[v] || 0) + 1; });
+        Object.entries(vendorCounts).sort((a, b) => b[1] - a[1]).forEach(([v, n]) => {
+            vh += `<option value="${esc(v)}" ${skillVendorFilter === v ? 'selected' : ''}>${esc(v)} (${n})</option>`;
+        });
+        vh += `</select>`;
+        vendorContainer.innerHTML = vh;
+    }
+
     container.innerHTML = html;
 }
 
-function setSkillCategory(cat) { skillCategoryFilter = cat; renderSkillFilters(); renderSkillsTable(); }
+function setSkillCategory(cat) { skillCategoryFilter = cat; skillPage = 1; renderSkillFilters(); renderSkillsTable(); }
+function setSkillVendor(v) { skillVendorFilter = v; skillPage = 1; renderSkillFilters(); renderSkillsTable(); }
 
 function getFilteredSkills() {
     let list = skills;
@@ -913,6 +916,9 @@ function getFilteredSkills() {
             const cats = skillCategories(sk);
             return cats.includes(skillCategoryFilter) || (cats.length === 0 && skillCategoryFilter === 'uncategorized');
         });
+    }
+    if (skillVendorFilter !== 'all') {
+        list = list.filter(sk => skillVendor(sk) === skillVendorFilter);
     }
     if (searchQuery) {
         const q = searchQuery.toLowerCase();
@@ -923,49 +929,97 @@ function getFilteredSkills() {
 
 function renderSkillsTable() {
     const filtered = getFilteredSkills();
-    const tbody = document.getElementById('skill-tbody');
     const empty = document.getElementById('skill-empty');
     const countEl = document.getElementById('skill-count');
+    const body = document.getElementById('skill-matrix-body');
+    const head = document.getElementById('skill-matrix-head');
 
-    if (skills.length === 0) { empty.classList.remove('hidden'); empty.classList.add('flex'); tbody.innerHTML = ''; countEl.textContent = ''; return; }
+    if (skills.length === 0) {
+        empty.classList.remove('hidden'); empty.classList.add('flex');
+        head.innerHTML = ''; body.innerHTML = ''; countEl.textContent = '';
+        return;
+    }
     empty.classList.add('hidden'); empty.classList.remove('flex');
 
-    if (filtered.length === 0) { tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant">No skills match your filters.</td></tr>'; countEl.textContent = '0 of ' + skills.length; return; }
+    if (filtered.length === 0) {
+        head.innerHTML = '';
+        body.innerHTML = `<tr><td colspan="${3 + knownTargets.length}" class="px-4 py-8 text-center text-on-surface-variant">No skills match your filters.</td></tr>`;
+        countEl.textContent = '0 of ' + skills.length;
+        return;
+    }
 
-    countEl.textContent = `${filtered.length} of ${skills.length} skills`;
-    tbody.innerHTML = filtered.map(sk => {
+    const visible = filtered.slice(0, skillPage * PAGE_SIZE);
+    countEl.textContent = `${visible.length}/${filtered.length} of ${skills.length} skills`;
+    renderSkillMatrix(visible, filtered.length);
+}
+
+function renderSkillMatrix(visible, totalFiltered) {
+    const head = document.getElementById('skill-matrix-head');
+    const body = document.getElementById('skill-matrix-body');
+
+    let headHtml = '<tr class="bg-surface">';
+    headHtml += `<th class="w-10 h-8 border-b border-r border-outline-variant bg-surface sticky left-0 z-40 px-2"><input type="checkbox" class="agent-cb" id="skill-matrix-select-all" onchange="toggleSkillSelectAll(this.checked)"></th>`;
+    headHtml += `<th class="w-48 h-8 border-b border-r border-outline-variant px-3 text-left font-label-caps text-on-surface-variant bg-surface sticky left-10 z-40 uppercase">Skill Name</th>`;
+    headHtml += `<th class="w-24 h-8 border-b border-r border-outline-variant px-2 text-left font-label-caps text-on-surface-variant bg-surface uppercase">Category</th>`;
+    knownTargets.forEach(t => {
+        headHtml += `<th class="h-8 border-b border-r border-outline-variant px-2 bg-surface group">
+            <div class="flex items-center justify-between">
+                <span class="font-label-caps text-label-caps text-on-surface-variant uppercase">${esc(PLATFORM_NAMES[t] || t)}</span>
+                <div class="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button class="hover:text-primary" title="Bulk Toggle" onclick="event.stopPropagation();skillColumnBulk('${esc(t)}')"><span class="material-symbols-outlined !text-[12px]">checklist</span></button>
+                </div>
+            </div>
+        </th>`;
+    });
+    headHtml += '</tr>';
+    head.innerHTML = headHtml;
+
+    body.innerHTML = visible.map(sk => {
         const entry = config.skills?.[sk.name];
         const active = resolveTargets(entry, knownTargets);
-        const checked = selectedSkills.has(sk.name);
-        const dots = knownTargets.map(t => {
-            const on = active.includes(t);
-            const label = PLATFORM_LABELS[t] || t.slice(0, 2).toUpperCase();
-            return `<button class="pdot ${on ? 'pdot-on' : 'pdot-off'}" data-platform="${esc(t)}" title="${on ? 'Disable' : 'Enable'} ${esc(PLATFORM_NAMES[t] || t)}" onclick="event.stopPropagation();toggleSkillPlatform('${esc(sk.name)}','${esc(t)}',${!on})">${label}</button>`;
-        }).join('');
         const cats = skillCategories(sk);
-        const catBadges = cats.length ? cats.slice(0, 2).map(c => `<span class="cat-badge">${esc(catLabel(c))}</span>`).join(' ') : '<span class="cat-badge">—</span>';
-        return `<tr class="lib-row ${checked ? 'row-selected' : ''}" onclick="viewSkill('${esc(sk.name)}')">
-            <td class="px-4 py-1.5" onclick="event.stopPropagation()"><input type="checkbox" class="agent-cb" ${checked ? 'checked' : ''} onchange="toggleSkillSelect('${esc(sk.name)}', this.checked)"></td>
-            <td class="px-4 py-1.5 text-primary font-bold">${esc(sk.name)}</td>
-            <td class="px-4 py-1.5 text-on-surface-variant" title="${esc(sk.description || '')}">${esc(truncate(sk.description, 60))}</td>
-            <td class="px-4 py-1.5">${catBadges}</td>
-            <td class="px-4 py-1.5"><div class="flex gap-1">${dots}</div></td>
-            <td class="px-2 py-1.5"><button class="text-on-surface-variant hover:text-primary transition-colors" title="Edit" onclick="event.stopPropagation();editSkill('${esc(sk.name)}')"><span class="material-symbols-outlined !text-[16px]">edit</span></button></td>
+        const catText = cats.length ? esc(catLabel(cats[0])) : '—';
+        const checked = selectedSkills.has(sk.name);
+
+        let cells = knownTargets.map(t => {
+            const on = active.includes(t);
+            const platformLinks = statusLinks.filter(l => l.agent === sk.name && l.platform === t);
+            const broken = platformLinks.some(l => l.broken);
+
+            let icon, color, fill, label;
+            if (!on) { icon = 'remove'; color = 'text-on-surface-variant opacity-20'; fill = false; label = 'Off'; }
+            else if (broken) { icon = 'error'; color = 'text-red-400'; fill = true; label = 'Broken'; }
+            else { icon = 'check_circle'; color = 'text-emerald-500'; fill = true; label = 'Synced'; }
+
+            return `<td class="border-b border-r border-outline-variant px-2 matrix-cell-focus group" tabindex="0">
+                <div class="flex items-center justify-center cursor-pointer" onclick="event.stopPropagation();toggleSkillPlatform('${esc(sk.name)}','${esc(t)}',${!on})">
+                    <span class="material-symbols-outlined matrix-cell-icon ${color}" ${fill ? "style='font-variation-settings: \"FILL\" 1;'" : ''}>${icon}</span>
+                </div>
+            </td>`;
+        }).join('');
+
+        return `<tr class="lib-row h-8 matrix-row ${checked ? 'row-selected' : ''}" onclick="viewSkill('${esc(sk.name)}')">
+            <td class="border-b border-r border-outline-variant text-center sticky left-0 matrix-sticky" onclick="event.stopPropagation()"><input type="checkbox" class="agent-cb" ${checked ? 'checked' : ''} onchange="toggleSkillSelect('${esc(sk.name)}', this.checked)"></td>
+            <td class="border-b border-r border-outline-variant px-3 text-primary font-bold sticky left-10 matrix-sticky" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(sk.name)}">${esc(shortName(sk.name))}</td>
+            <td class="border-b border-r border-outline-variant px-2 text-on-surface-variant italic text-[11px]" style="opacity:.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${catText}</td>
+            ${cells}
         </tr>`;
     }).join('');
 
-    updateSkillBulkBar();
-    const selectAll = document.getElementById('skill-select-all');
-    if (selectAll) selectAll.checked = filtered.length > 0 && filtered.every(s => selectedSkills.has(s.name));
+    const hasMore = visible.length < totalFiltered;
+    if (hasMore) {
+        body.innerHTML += `<tr><td colspan="${3 + knownTargets.length}" class="px-4 py-3 text-center"><button class="h-8 px-6 bg-primary text-on-primary font-mono-sm font-bold hover:opacity-90 active:scale-95 transition-all" onclick="skillPage++;renderSkillsTable()">Load More (${totalFiltered - visible.length} remaining)</button></td></tr>`;
+    }
 }
 
 async function toggleSkillPlatform(name, platform, enable) {
-    const m = JSON.parse(JSON.stringify(config.skills || {}));
-    const e = m[name] || { targets: [], disabled: false };
-    let c = resolveTargets(e, knownTargets);
-    if (enable) { if (!c.includes(platform)) c.push(platform); } else { c = c.filter(t => t !== platform); }
-    e.targets = c; e.disabled = false; m[name] = e;
-    try { await api('/api/config', { method: 'PUT', body: JSON.stringify({ targets: config.targets, agents: config.agents, skills: m }) }); config.skills = m; renderSkillsTable(); showSnackbar(`${name}: ${PLATFORM_NAMES[platform] || platform} ${enable ? 'enabled' : 'disabled'}`); } catch (e) { showSnackbar('Failed: ' + e.message, 4000); }
+    try {
+        const res = await api('/api/toggle', { method: 'POST', body: JSON.stringify({ type: 'skill', items: [{ name, platform, enable }] }) });
+        if (res.config) { config.skills = res.config.skills || {}; }
+        renderSkillsTable();
+        refreshStatus();
+        showSnackbar(`${shortName(name)}: ${PLATFORM_NAMES[platform] || platform} ${enable ? 'enabled' : 'disabled'}`);
+    } catch (e) { showSnackbar('Failed: ' + e.message, 4000); }
 }
 
 function toggleSkillSelect(name, checked) { if (checked) selectedSkills.add(name); else selectedSkills.delete(name); renderSkillsTable(); }
@@ -983,21 +1037,48 @@ function updateSkillBulkBar() {
 }
 
 async function skillBulkToggle(platform, enable) {
-    const m = JSON.parse(JSON.stringify(config.skills || {}));
-    for (const name of selectedSkills) { const e = m[name] || { targets: [], disabled: false }; let c = resolveTargets(e, knownTargets); if (enable) { if (!c.includes(platform)) c.push(platform); } else { c = c.filter(t => t !== platform); } e.targets = c; e.disabled = false; m[name] = e; }
-    try { await api('/api/config', { method: 'PUT', body: JSON.stringify({ targets: config.targets, agents: config.agents, skills: m }) }); config.skills = m; renderSkillsTable(); showSnackbar(`${selectedSkills.size} skills: ${PLATFORM_NAMES[platform] || platform} ${enable ? 'enabled' : 'disabled'}`); } catch (e) { showSnackbar('Failed: ' + e.message, 4000); }
+    const items = [...selectedSkills].map(name => ({ name, platform, enable }));
+    try {
+        const res = await api('/api/toggle', { method: 'POST', body: JSON.stringify({ type: 'skill', items }) });
+        if (res.config) { config.skills = res.config.skills || {}; }
+        renderSkillsTable();
+        refreshStatus();
+        showSnackbar(`${selectedSkills.size} skills: ${PLATFORM_NAMES[platform] || platform} ${enable ? 'enabled' : 'disabled'}`);
+    } catch (e) { showSnackbar('Failed: ' + e.message, 4000); }
 }
 
 async function skillBulkEnableAll() {
-    const m = JSON.parse(JSON.stringify(config.skills || {}));
-    for (const name of selectedSkills) { const e = m[name] || {}; e.targets = [...knownTargets]; e.disabled = false; m[name] = e; }
-    try { await api('/api/config', { method: 'PUT', body: JSON.stringify({ targets: config.targets, agents: config.agents, skills: m }) }); config.skills = m; renderSkillsTable(); showSnackbar(`${selectedSkills.size} skills: all on`); } catch (e) { showSnackbar('Failed: ' + e.message, 4000); }
+    const items = [];
+    for (const name of selectedSkills) for (const t of knownTargets) items.push({ name, platform: t, enable: true });
+    try {
+        const res = await api('/api/toggle', { method: 'POST', body: JSON.stringify({ type: 'skill', items }) });
+        if (res.config) { config.skills = res.config.skills || {}; }
+        renderSkillsTable();
+        refreshStatus();
+        showSnackbar(`${selectedSkills.size} skills: all on`);
+    } catch (e) { showSnackbar('Failed: ' + e.message, 4000); }
 }
 
 async function skillBulkDisableAll() {
-    const m = JSON.parse(JSON.stringify(config.skills || {}));
-    for (const name of selectedSkills) { const e = m[name] || {}; e.targets = []; e.disabled = false; m[name] = e; }
-    try { await api('/api/config', { method: 'PUT', body: JSON.stringify({ targets: config.targets, agents: config.agents, skills: m }) }); config.skills = m; renderSkillsTable(); showSnackbar(`${selectedSkills.size} skills: all off`); } catch (e) { showSnackbar('Failed: ' + e.message, 4000); }
+    const items = [];
+    for (const name of selectedSkills) for (const t of knownTargets) items.push({ name, platform: t, enable: false });
+    try {
+        const res = await api('/api/toggle', { method: 'POST', body: JSON.stringify({ type: 'skill', items }) });
+        if (res.config) { config.skills = res.config.skills || {}; }
+        renderSkillsTable();
+        refreshStatus();
+        showSnackbar(`${selectedSkills.size} skills: all off`);
+    } catch (e) { showSnackbar('Failed: ' + e.message, 4000); }
+}
+
+async function skillColumnBulk(platform) {
+    if (selectedSkills.size === 0) { showSnackbar('Select skills first', 3000); return; }
+    await skillBulkToggle(platform, true);
+}
+
+async function agentColumnBulk(platform) {
+    if (selectedAgents.size === 0) { showSnackbar('Select agents first', 3000); return; }
+    await bulkTogglePlatform(platform, true);
 }
 
 // Skill drawer
@@ -1167,15 +1248,20 @@ function renderStatusList() {
         <tr class="hover:bg-surface-container-low transition-colors">
             <td class="px-4 py-1.5"><span class="status-dot ${l.broken ? 'status-dot-err' : 'status-dot-ok'}"></span></td>
             <td class="px-4 py-1.5 text-primary font-bold">${esc(l.agent)}</td>
+            <td class="px-4 py-1.5"><span class="px-1.5 py-0.5 border border-outline-variant bg-surface-variant text-[10px] uppercase">${esc(l.type || 'agent')}</span></td>
             <td class="px-4 py-1.5"><span class="px-1.5 py-0.5 border border-outline-variant bg-surface-variant text-[10px]">${esc((PLATFORM_NAMES[l.platform] || l.platform).toUpperCase())}</span></td>
             <td class="px-4 py-1.5 text-outline truncate max-w-[300px]">${esc(l.path)}</td>
-            <td class="px-2 py-1.5"><button class="text-on-surface-variant hover:text-primary transition-colors" title="Preview" onclick="quickPreview('${esc(l.agent)}','${esc(l.platform)}')"><span class="material-symbols-outlined !text-[16px]">visibility</span></button></td>
+            <td class="px-2 py-1.5"><button class="text-on-surface-variant hover:text-primary transition-colors" title="Preview" onclick="quickPreview('${esc(l.agent)}','${esc(l.platform)}','${esc(l.type || 'agent')}')"><span class="material-symbols-outlined !text-[16px]">visibility</span></button></td>
         </tr>
     `).join('');
 }
 
-function quickPreview(agent, platform) {
-    viewAgent(agent);
+function quickPreview(agent, platform, type) {
+    if (type === 'skill') {
+        viewSkill(agent);
+    } else {
+        viewAgent(agent);
+    }
     setTimeout(() => {
         if (drawerMode === 'view') {
             document.getElementById('drawer-view-mode').classList.add('hidden');
@@ -1187,15 +1273,45 @@ function quickPreview(agent, platform) {
 }
 
 // ═══════════════════════════════════
-// SYNC / CLEAN
+// CLEAN
 // ═══════════════════════════════════
-async function triggerSync() {
-    const ok = await showConfirm('Sync all agents & skills?', 'This generates platform-specific files for all enabled agents and skills.');
+
+async function triggerClean() {
+    const ok = await showConfirm('Remove ALL generated files?', 'All symlinks and generated output will be deleted. Source files are kept.');
     if (!ok) return;
-    document.getElementById('footer-status').textContent = 'SYNCING…';
     try {
-        const res = await api('/api/sync', { method: 'POST' });
-        showSnackbar(`Synced ${res.agentsSynced || 0} agent(s) and ${res.skillsSynced || 0} skill(s)`);
+        const res = await api('/api/clean', { method: 'POST' });
+        if (res.config) { config.agents = res.config.agents || {}; config.skills = res.config.skills || {}; }
+        showSnackbar(`Removed ${res.removed || 0} files`);
+        await refreshStatus();
+        if (currentView === 'agents') renderAgentsTable();
+        if (currentView === 'skills') renderSkillsTable();
+        if (currentView === 'overview') renderOverview();
+    } catch (e) { showSnackbar('Clean failed: ' + e.message, 5000); }
+}
+
+async function triggerCleanBroken() {
+    try {
+        const res = await api('/api/clean-broken', { method: 'POST' });
+        if (res.config) { config.agents = res.config.agents || {}; config.skills = res.config.skills || {}; }
+        const parts = [];
+        if (res.fixed) parts.push(`fixed ${res.fixed}`);
+        if (res.removed) parts.push(`removed ${res.removed}`);
+        showSnackbar(parts.length ? `Broken symlinks: ${parts.join(', ')}` : 'No broken symlinks');
+        await refreshStatus();
+        if (currentView === 'agents') renderAgentsTable();
+        if (currentView === 'skills') renderSkillsTable();
+        if (currentView === 'overview') renderOverview();
+    } catch (e) { showSnackbar('Failed: ' + e.message, 5000); }
+}
+
+async function triggerInit() {
+    const ok = await showConfirm('Reinitialize ~/.dotagen?', 'This recreates all built-in agents and skills with fresh config. Your existing agents/skills and custom edits will be overwritten.');
+    if (!ok) return;
+    document.getElementById('footer-status').textContent = 'INITIALIZING…';
+    try {
+        const res = await api('/api/init', { method: 'POST' });
+        showSnackbar(`Reinitialized: ${res.agents || 0} agents, ${res.skills || 0} skills`);
         await loadAll();
         document.getElementById('footer-status').textContent = 'READY';
         if (currentView === 'overview') renderOverview();
@@ -1203,36 +1319,9 @@ async function triggerSync() {
         if (currentView === 'skills') renderSkillsTable();
         if (currentView === 'status') { renderStatusFilters(); renderStatusList(); }
     } catch (e) {
-        showSnackbar('Sync failed: ' + e.message, 5000);
+        showSnackbar('Init failed: ' + e.message, 5000);
         document.getElementById('footer-status').textContent = 'ERROR';
     }
-}
-
-async function syncTarget(target) {
-    if (!isValidTarget(target)) return;
-    try {
-        showSnackbar(`Syncing ${PLATFORM_NAMES[target] || target}…`);
-        const res = await api('/api/sync/' + target, { method: 'POST' });
-        showSnackbar(`Synced ${res.synced || 0} items for ${PLATFORM_NAMES[target] || target}`);
-        await loadAll();
-        renderAgentsTable();
-    } catch (e) { showSnackbar('Sync failed: ' + e.message, 5000); }
-}
-
-function isValidTarget(name) {
-    return knownTargets.includes(name);
-}
-
-async function triggerClean() {
-    const ok = await showConfirm('Remove generated files?', 'Source agent files will be kept. Only generated output and symlinks will be deleted.');
-    if (!ok) return;
-    try {
-        const res = await api('/api/clean', { method: 'POST' });
-        showSnackbar(`Removed ${res.removed || 0} files`);
-        await loadAll();
-        if (currentView === 'overview') renderOverview();
-        if (currentView === 'status') { renderStatusFilters(); renderStatusList(); }
-    } catch (e) { showSnackbar('Clean failed: ' + e.message, 5000); }
 }
 
 // ═══════════════════════════════════
@@ -1299,11 +1388,17 @@ document.addEventListener('click', (e) => {
 // SEARCH
 // ═══════════════════════════════════
 const searchInput = document.getElementById('global-search');
+let searchDebounce = null;
 searchInput.addEventListener('input', (e) => {
     searchQuery = e.target.value.trim().toLowerCase();
-    if (currentView === 'agents') renderAgentsTable();
-    else if (currentView === 'skills') renderSkillsTable();
-    else if (searchQuery) switchView('agents');
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(() => {
+        skillPage = 1;
+        agentPage = 1;
+        if (currentView === 'agents') renderAgentsTable();
+        else if (currentView === 'skills') renderSkillsTable();
+        else if (searchQuery) switchView('agents');
+    }, 200);
 });
 
 // ═══════════════════════════════════

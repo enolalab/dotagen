@@ -13,9 +13,11 @@ import (
 
 	"github.com/adrg/frontmatter"
 	"github.com/enolalabs/dotagen/v2/internal/agent"
+	"github.com/enolalabs/dotagen/v2/internal/builtin"
 	"github.com/enolalabs/dotagen/v2/internal/config"
 	"github.com/enolalabs/dotagen/v2/internal/engine"
 	"github.com/enolalabs/dotagen/v2/internal/skill"
+	"github.com/enolalabs/dotagen/v2/skillsrc"
 	"gopkg.in/yaml.v3"
 )
 
@@ -26,7 +28,7 @@ func (s *Server) dotgenDir() (string, error) {
 }
 
 func (s *Server) projectDir() (string, error) {
-	return config.GetProjectDir()
+	return os.UserHomeDir()
 }
 
 func writeJSON(w http.ResponseWriter, status int, v interface{}) {
@@ -407,7 +409,7 @@ func (s *Server) handleSync(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	projectDir, err := config.GetProjectDir()
+	projectDir, err := s.projectDir()
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -487,7 +489,7 @@ func (s *Server) handleSyncTarget(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	projectDir, err := config.GetProjectDir()
+	projectDir, err := s.projectDir()
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -579,7 +581,7 @@ func (s *Server) handleClean(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	projectDir, err := config.GetProjectDir()
+	projectDir, err := s.projectDir()
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -587,6 +589,12 @@ func (s *Server) handleClean(w http.ResponseWriter, r *http.Request) {
 
 	s.lock()
 	defer s.unlock()
+
+	cfg, err := config.LoadConfig(dotgenDir)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
 	links, err := engine.FindDotagenSymlinks(projectDir, dotgenDir)
 	if err != nil {
@@ -601,7 +609,6 @@ func (s *Server) handleClean(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Also clean skill symlinks
 	skillLinks, err := engine.FindDotagenSkillSymlinks(projectDir, dotgenDir)
 	if err != nil {
 		log.Printf("failed to find skill symlinks: %v", err)
@@ -617,7 +624,154 @@ func (s *Server) handleClean(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, fmt.Sprintf("removed %d symlinks but failed to clean generated: %v", removed, err))
 		return
 	}
-	writeJSON(w, http.StatusOK, map[string]int{"removed": removed})
+
+	// Clear all targets in config
+	for name := range cfg.Agents {
+		cfg.Agents[name] = config.AgentConfig{Targets: config.StringOrSlice{}, Disabled: false}
+	}
+	for name := range cfg.Skills {
+		cfg.Skills[name] = config.SkillConfig{Targets: config.StringOrSlice{}, Disabled: false}
+	}
+	if err := config.SaveConfig(dotgenDir, cfg); err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"removed": removed,
+		"config":  cfg,
+	})
+}
+
+func (s *Server) handleCleanBroken(w http.ResponseWriter, r *http.Request) {
+	dotgenDir, err := s.dotgenDir()
+	if err != nil {
+		writeError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	projectDir, err := s.projectDir()
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	s.lock()
+	defer s.unlock()
+
+	cfg, err := config.LoadConfig(dotgenDir)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	fixed := 0
+	removed := 0
+
+	// Fix/remove broken agent symlinks
+	links, err := engine.FindDotagenSymlinks(projectDir, dotgenDir)
+	if err == nil {
+		for _, link := range links {
+			if !link.Broken {
+				continue
+			}
+			adapter, err := s.registry.Get(link.Platform)
+			if err != nil {
+				os.Remove(link.Path)
+				removeFromAgentConfig(cfg, link.Agent, link.Platform)
+				removed++
+				continue
+			}
+			ag, err := agent.ParseAgentFile(filepath.Join(dotgenDir, "agents", link.Agent+".md"))
+			if err != nil {
+				os.Remove(link.Path)
+				removeFromAgentConfig(cfg, link.Agent, link.Platform)
+				removed++
+				continue
+			}
+			rendered, err := adapter.Render(*ag)
+			if err != nil {
+				os.Remove(link.Path)
+				removeFromAgentConfig(cfg, link.Agent, link.Platform)
+				removed++
+				continue
+			}
+			outPath := filepath.Join(dotgenDir, ".generated", adapter.OutputPath(link.Agent))
+			os.MkdirAll(filepath.Dir(outPath), 0o755)
+			if err := os.WriteFile(outPath, []byte(rendered), 0o644); err != nil {
+				os.Remove(link.Path)
+				removeFromAgentConfig(cfg, link.Agent, link.Platform)
+				removed++
+				continue
+			}
+			fixed++
+		}
+	}
+
+	// Fix/remove broken skill symlinks
+	skillLinks, err := engine.FindDotagenSkillSymlinks(projectDir, dotgenDir)
+	if err == nil {
+		for _, link := range skillLinks {
+			if !link.Broken {
+				continue
+			}
+			sa, err := s.registry.GetSkillAdapter(link.Platform)
+			if err != nil {
+				os.RemoveAll(link.Path)
+				removeFromSkillConfig(cfg, link.Agent, link.Platform)
+				removed++
+				continue
+			}
+			sk, err := skill.ParseSkillDir(filepath.Join(dotgenDir, "skills", link.Agent))
+			if err != nil || sk == nil {
+				os.RemoveAll(link.Path)
+				removeFromSkillConfig(cfg, link.Agent, link.Platform)
+				removed++
+				continue
+			}
+			rendered, err := sa.RenderSkill(*sk)
+			if err != nil {
+				os.RemoveAll(link.Path)
+				removeFromSkillConfig(cfg, link.Agent, link.Platform)
+				removed++
+				continue
+			}
+			outDir := filepath.Join(dotgenDir, ".generated", sa.SkillOutputDir(link.Agent))
+			os.MkdirAll(outDir, 0o755)
+			os.WriteFile(filepath.Join(outDir, "SKILL.md"), []byte(rendered), 0o644)
+			for _, ref := range sk.References {
+				refPath := filepath.Join(outDir, ref.Name)
+				os.MkdirAll(filepath.Dir(refPath), 0o755)
+				os.WriteFile(refPath, []byte(ref.Content), 0o644)
+			}
+			fixed++
+		}
+	}
+
+	config.SaveConfig(dotgenDir, cfg)
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"fixed":   fixed,
+		"removed": removed,
+		"config":  cfg,
+	})
+}
+
+func removeFromAgentConfig(cfg *config.Config, name, platform string) {
+	entry, ok := cfg.Agents[name]
+	if !ok {
+		return
+	}
+	entry.Targets = removeFromStringSlice(entry.Targets, platform)
+	cfg.Agents[name] = entry
+}
+
+func removeFromSkillConfig(cfg *config.Config, name, platform string) {
+	entry, ok := cfg.Skills[name]
+	if !ok {
+		return
+	}
+	entry.Targets = removeFromStringSlice(entry.Targets, platform)
+	cfg.Skills[name] = entry
 }
 
 func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
@@ -626,7 +780,7 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	projectDir, err := config.GetProjectDir()
+	projectDir, err := s.projectDir()
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -638,10 +792,16 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	skillLinks, err := engine.FindDotagenSkillSymlinks(projectDir, dotgenDir)
+	if err != nil {
+		log.Printf("failed to find skill symlinks: %v", err)
+	}
+
 	type linkStatus struct {
 		Path     string `json:"path"`
 		Agent    string `json:"agent"`
 		Platform string `json:"platform"`
+		Type     string `json:"type"`
 		Broken   bool   `json:"broken"`
 	}
 	var statuses []linkStatus
@@ -651,10 +811,310 @@ func (s *Server) handleStatus(w http.ResponseWriter, r *http.Request) {
 			Path:     rel,
 			Agent:    l.Agent,
 			Platform: l.Platform,
+			Type:     "agent",
+			Broken:   l.Broken,
+		})
+	}
+	for _, l := range skillLinks {
+		rel, _ := filepath.Rel(projectDir, l.Path)
+		statuses = append(statuses, linkStatus{
+			Path:     rel,
+			Agent:    l.Agent,
+			Platform: l.Platform,
+			Type:     "skill",
 			Broken:   l.Broken,
 		})
 	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"symlinks": statuses,
+	})
+}
+
+func (s *Server) handleToggle(w http.ResponseWriter, r *http.Request) {
+	dotgenDir, err := s.dotgenDir()
+	if err != nil {
+		writeError(w, http.StatusNotFound, err.Error())
+		return
+	}
+	projectDir, err := s.projectDir()
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	var req struct {
+		Type  string `json:"type"`
+		Items []struct {
+			Name     string `json:"name"`
+			Platform string `json:"platform"`
+			Enable   bool   `json:"enable"`
+		} `json:"items"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON")
+		return
+	}
+	if req.Type != "agent" && req.Type != "skill" {
+		writeError(w, http.StatusBadRequest, "type must be 'agent' or 'skill'")
+		return
+	}
+
+	s.lock()
+	defer s.unlock()
+
+	cfg, err := config.LoadConfig(dotgenDir)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// 1. Validate items and update config
+	for _, item := range req.Items {
+		if !isValidTarget(item.Platform) {
+			continue
+		}
+		if req.Type == "agent" {
+			// Validate source file exists before touching config
+			if item.Enable {
+				if _, err := os.Stat(filepath.Join(dotgenDir, "agents", item.Name+".md")); err != nil {
+					continue
+				}
+			}
+			entry := cfg.Agents[item.Name]
+			entry.Disabled = false
+			if item.Enable {
+				if !containsString(entry.Targets, item.Platform) {
+					entry.Targets = append(entry.Targets, item.Platform)
+				}
+			} else {
+				entry.Targets = removeFromStringSlice(entry.Targets, item.Platform)
+			}
+			if cfg.Agents == nil {
+				cfg.Agents = make(map[string]config.AgentConfig)
+			}
+			cfg.Agents[item.Name] = entry
+		} else {
+			// Validate source dir exists before touching config
+			if item.Enable {
+				if _, err := os.Stat(filepath.Join(dotgenDir, "skills", item.Name)); err != nil {
+					continue
+				}
+			}
+			entry := cfg.Skills[item.Name]
+			entry.Disabled = false
+			if item.Enable {
+				if !containsString(entry.Targets, item.Platform) {
+					entry.Targets = append(entry.Targets, item.Platform)
+				}
+			} else {
+				entry.Targets = removeFromStringSlice(entry.Targets, item.Platform)
+			}
+			if cfg.Skills == nil {
+				cfg.Skills = make(map[string]config.SkillConfig)
+			}
+			cfg.Skills[item.Name] = entry
+		}
+	}
+
+	if err := config.SaveConfig(dotgenDir, cfg); err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// 2. Create/remove symlinks
+	synced := 0
+	removed := 0
+	for _, item := range req.Items {
+		if !isValidTarget(item.Platform) {
+			continue
+		}
+		if req.Type == "agent" {
+			adapter, err := s.registry.Get(item.Platform)
+			if err != nil {
+				continue
+			}
+			if item.Enable {
+				ag, err := agent.ParseAgentFile(filepath.Join(dotgenDir, "agents", item.Name+".md"))
+				if err != nil {
+					continue
+				}
+				rendered, err := adapter.Render(*ag)
+				if err != nil {
+					continue
+				}
+				outPath := filepath.Join(dotgenDir, ".generated", adapter.OutputPath(item.Name))
+				os.MkdirAll(filepath.Dir(outPath), 0o755)
+				os.WriteFile(outPath, []byte(rendered), 0o644)
+				absGenerated, _ := filepath.Abs(outPath)
+				adapter.EnsureDirectories(projectDir)
+				symlinkPath := filepath.Join(projectDir, adapter.SymlinkPath(item.Name))
+				engine.CreateSymlink(absGenerated, symlinkPath)
+				synced++
+			} else {
+				symlinkPath := filepath.Join(projectDir, adapter.SymlinkPath(item.Name))
+				if err := engine.RemoveSymlink(symlinkPath); err == nil {
+					removed++
+				}
+			}
+		} else {
+			sa, err := s.registry.GetSkillAdapter(item.Platform)
+			if err != nil {
+				continue
+			}
+			if item.Enable {
+				sk, err := skill.ParseSkillDir(filepath.Join(dotgenDir, "skills", item.Name))
+				if err != nil || sk == nil {
+					continue
+				}
+				rendered, err := sa.RenderSkill(*sk)
+				if err != nil {
+					continue
+				}
+				outDir := filepath.Join(dotgenDir, ".generated", sa.SkillOutputDir(item.Name))
+				os.MkdirAll(outDir, 0o755)
+				os.WriteFile(filepath.Join(outDir, "SKILL.md"), []byte(rendered), 0o644)
+				for _, ref := range sk.References {
+					refPath := filepath.Join(outDir, ref.Name)
+					os.MkdirAll(filepath.Dir(refPath), 0o755)
+					os.WriteFile(refPath, []byte(ref.Content), 0o644)
+				}
+				absGenerated, _ := filepath.Abs(outDir)
+				sa.EnsureSkillDirectories(projectDir)
+				symlinkDir := filepath.Join(projectDir, sa.SkillSymlinkDir(item.Name))
+				engine.CreateSymlink(absGenerated, symlinkDir)
+				synced++
+			} else {
+				symlinkDir := filepath.Join(projectDir, sa.SkillSymlinkDir(item.Name))
+				os.RemoveAll(symlinkDir)
+				removed++
+			}
+		}
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"synced":  synced,
+		"removed": removed,
+		"config":  cfg,
+	})
+}
+
+func containsString(slice config.StringOrSlice, s string) bool {
+	for _, v := range slice {
+		if v == s {
+			return true
+		}
+	}
+	return false
+}
+
+func removeFromStringSlice(slice config.StringOrSlice, s string) config.StringOrSlice {
+	var result config.StringOrSlice
+	for _, v := range slice {
+		if v != s {
+			result = append(result, v)
+		}
+	}
+	return result
+}
+
+func (s *Server) handleInit(w http.ResponseWriter, r *http.Request) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to get home directory: "+err.Error())
+		return
+	}
+	dotgenDir, err := config.FindDotgenDir()
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	s.lock()
+	defer s.unlock()
+
+	if _, err := os.Stat(dotgenDir); err == nil {
+		links, _ := engine.FindDotagenSymlinks(home, dotgenDir)
+		for _, link := range links {
+			os.Remove(link.Path)
+		}
+		engine.RemoveGeneratedContents(dotgenDir)
+		os.RemoveAll(filepath.Join(dotgenDir, "agents"))
+		os.RemoveAll(filepath.Join(dotgenDir, "skills"))
+		os.Remove(filepath.Join(dotgenDir, "config.yaml"))
+	}
+
+	for _, dir := range []string{
+		filepath.Join(dotgenDir, "agents"),
+		filepath.Join(dotgenDir, "skills"),
+		filepath.Join(dotgenDir, ".generated"),
+	} {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			writeError(w, http.StatusInternalServerError, "failed to create directory: "+err.Error())
+			return
+		}
+	}
+
+	agentNames := builtin.ListAgents()
+	for _, name := range agentNames {
+		data, err := builtin.ReadAgent(name)
+		if err != nil {
+			continue
+		}
+		os.WriteFile(filepath.Join(dotgenDir, "agents", name+".md"), data, 0o644)
+	}
+
+	skillNames := skillsrc.ListSkills()
+	for _, name := range skillNames {
+		files := skillsrc.ListSkillFiles(name)
+		for _, file := range files {
+			data, err := skillsrc.ReadSkillFile(name + "/" + file)
+			if err != nil {
+				continue
+			}
+			outPath := filepath.Join(dotgenDir, "skills", name, file)
+			os.MkdirAll(filepath.Dir(outPath), 0o755)
+			os.WriteFile(outPath, data, 0o644)
+		}
+	}
+
+	detected := config.DetectPlatforms(home)
+	allTargets := config.ValidTargets
+	var cfgTargets []string
+	if len(detected) > 0 {
+		cfgTargets = detected
+	} else {
+		cfgTargets = allTargets
+	}
+
+	var sb strings.Builder
+	sb.WriteString("# dotagen configuration\n")
+	sb.WriteString("# Docs: https://github.com/enolalabs/dotagen\n")
+	sb.WriteString("#\n")
+	sb.WriteString("# All agents and skills are listed with empty targets (disabled).\n")
+	sb.WriteString("# Set targets to enable them. Examples:\n")
+	sb.WriteString("#   targets: all                    — all platforms\n")
+	sb.WriteString("#   targets: [claude-code, gemini-cli]  — specific platforms\n")
+	sb.WriteString("#\n")
+	sb.WriteString("# Platforms are auto-detected from $HOME.\n\n")
+	sb.WriteString("targets:\n")
+	for _, t := range cfgTargets {
+		sb.WriteString(fmt.Sprintf("  - %s\n", t))
+	}
+	sb.WriteString("\nagents:\n")
+	for _, name := range agentNames {
+		sb.WriteString(fmt.Sprintf("  %s:\n    targets: []\n", name))
+	}
+	sb.WriteString("\nskills:\n")
+	for _, name := range skillNames {
+		sb.WriteString(fmt.Sprintf("  %s:\n    targets: []\n", name))
+	}
+	os.WriteFile(filepath.Join(dotgenDir, "config.yaml"), []byte(sb.String()), 0o644)
+	os.WriteFile(filepath.Join(dotgenDir, ".gitignore"), []byte(".generated/\n"), 0o644)
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"agents":    len(agentNames),
+		"skills":    len(skillNames),
+		"platforms": detected,
+		"reinit":    true,
 	})
 }

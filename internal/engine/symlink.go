@@ -109,10 +109,14 @@ func RemoveGeneratedContents(dotgenDir string) error {
 
 func FindDotagenSymlinks(projectDir string, dotgenDir string) ([]SymlinkInfo, error) {
 	platformDirs := map[string]string{
-		config.ClaudeCodeRootPath: "claude-code",
-		config.CodexRootPath:     "codex",
-		config.GeminiCliRootPath: "gemini-cli",
-		config.OpenCodeRootPath:  "opencode",
+		config.ClaudeCodeRootPath:    "claude-code",
+		config.CodexRootPath:         "codex",
+		config.GeminiCliRootPath:     "gemini-cli",
+		config.OpenCodeRootPath:      "opencode",
+		config.AntigravityRootPath:   "antigravity",
+		config.CursorRootPath:        "cursor",
+		config.CopilotRootPath:       "github-copilot",
+		config.WindsurfRootPath:      "windsurf",
 	}
 
 	var links []SymlinkInfo
@@ -127,7 +131,7 @@ func FindDotagenSymlinks(projectDir string, dotgenDir string) ([]SymlinkInfo, er
 				continue
 			}
 			name := strings.TrimSuffix(entry.Name(), filepath.Ext(entry.Name()))
-			if !strings.HasPrefix(name, "da-") {
+			if !strings.HasPrefix(name, "dotagent-") && !strings.HasPrefix(name, "da-") {
 				continue
 			}
 			fullPath := filepath.Join(fullDir, entry.Name())

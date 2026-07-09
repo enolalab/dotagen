@@ -2,7 +2,7 @@
 
 > **Define sub-agents and skills once, inject everywhere.**
 
-`dotagen` is a Go CLI tool that lets you define coding sub-agents and skills **once** in Markdown and automatically distribute them across multiple coding agent platforms (Claude Code, Codex, Gemini CLI, OpenCode, Antigravity).
+`dotagen` is a Go CLI tool that lets you define coding sub-agents and skills **once** in Markdown and automatically distribute them across multiple coding agent platforms (Antigravity, Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, OpenCode, Windsurf).
 
 Instead of writing and maintaining N sets of configurations for N platforms, you manage **a single source of truth** in `.dotagen/` — dotagen renders each agent/skill to the correct platform format and creates symlinks automatically.
 
@@ -19,101 +19,101 @@ Instead of writing and maintaining N sets of configurations for N platforms, you
 
 | Platform | ID | Agent Path | Skill Path |
 |---|---|---|---|
-| **Antigravity** | `antigravity` | `.agents/{name}.md` | `.agents/skills/{name}/` |
+| **Antigravity** | `antigravity` | `.agents/{name}.md` | `.agent/skills/{name}/` |
 | **Claude Code** | `claude-code` | `.claude/agents/{name}.md` | `.claude/skills/{name}/` |
-| **Codex** | `codex` | `.codex/agents/{name}.md` | `.codex/skills/{name}/` |
-| **Gemini CLI** | `gemini-cli` | `.gemini/agents/{name}.md` | `.agents/skills/{name}/` |
+| **Codex** | `codex` | `.codex/agents/{name}.md` | `.agents/skills/{name}/` |
+| **Cursor** | `cursor` | `.cursor/rules/{name}.mdc` | `.cursor/skills/{name}/` |
+| **Gemini CLI** | `gemini-cli` | `.gemini/agents/{name}.md` | `.gemini/skills/{name}/` |
+| **GitHub Copilot** | `github-copilot` | `.github/agents/{name}.md` | `.github/skills/{name}/` |
 | **OpenCode** | `opencode` | `.config/opencode/agents/{name}.md` | `.opencode/skills/{name}/` |
+| **Windsurf** | `windsurf` | `.windsurf/rules/{name}.md` | `.windsurf/skills/{name}/` |
 
 ## Installation
 
-### Prerequisites
-
-- **Go 1.26+** — Download from [go.dev/dl](https://go.dev/dl/)
-- **Git** — Download from [git-scm.com](https://git-scm.com/downloads)
-
-Verify Go is installed:
+### One-liner (Linux & macOS)
 
 ```bash
-go version
-# go version go1.26.2 <os>/<arch>
+curl -fsSL https://raw.githubusercontent.com/enolalabs/dotagen/main/install.sh | sh
+```
+
+Or with `wget`:
+
+```bash
+wget -qO- https://raw.githubusercontent.com/enolalabs/dotagen/main/install.sh | sh
+```
+
+Supports **Linux** (amd64, arm64) and **macOS** (Intel, Apple Silicon). Automatically detects your OS/arch, downloads the latest release, and installs to `/usr/local/bin` (or `~/.local/bin` as fallback).
+
+### Update
+
+Already installed? Run the same install command again, or use:
+
+```bash
+dotagen update
+```
+
+Checks for the latest version and self-updates in place.
+
+### Windows (PowerShell)
+
+```powershell
+$version = (Invoke-RestMethod "https://api.github.com/repos/enolalabs/dotagen/releases/latest").tag_name
+$url = "https://github.com/enolalabs/dotagen/releases/download/$version/dotagen_$($version.Substring(1))_windows_amd64.exe"
+Invoke-WebRequest $url -OutFile "$env:USERPROFILE\bin\dotagen.exe"
+```
+
+Then add `%USERPROFILE%\bin` to your PATH if not already there.
+
+### Install via `go install`
+
+If you have Go 1.26+:
+
+```bash
+go install github.com/enolalabs/dotagen/cmd/dotagen@latest
 ```
 
 ### Build from source
 
+<details>
+<summary>Manual build instructions</summary>
+
 #### Linux
 
 ```bash
-# 1. Clone
 git clone https://github.com/enolalabs/dotagen.git
 cd dotagen
-
-# 2. Build
 make build
-
-# 3. Install to PATH
 sudo cp dotagen /usr/local/bin/
-
-# 4. Verify
 dotagen --version
 ```
 
 #### macOS
 
 ```bash
-# 1. Clone
 git clone https://github.com/enolalabs/dotagen.git
 cd dotagen
-
-# 2. Build
 make build
-
-# 3. Install to PATH
 sudo cp dotagen /usr/local/bin/
-# Or use Homebrew prefix:
-# sudo cp dotagen /opt/homebrew/bin/
-
-# 4. Verify
+# Or: sudo cp dotagen /opt/homebrew/bin/
 dotagen --version
 ```
 
 #### Windows (PowerShell)
 
 ```powershell
-# 1. Clone
 git clone https://github.com/enolalabs/dotagen.git
 cd dotagen
-
-# 2. Build
 go build -ldflags="-X github.com/enolalabs/dotagen/v2/internal/cli/version=dev" -o dotagen.exe .\cmd\dotagen
-
-# 3. Install to PATH
 mkdir "$env:USERPROFILE\bin" -Force -ErrorAction SilentlyContinue
 Copy-Item dotagen.exe "$env:USERPROFILE\bin\"
-
-# Add to PATH (current session)
-$env:PATH += ";$env:USERPROFILE\bin"
-
-# Or permanently add to PATH
-[Environment]::SetEnvironmentVariable("PATH", $env:PATH + ";$env:USERPROFILE\bin", "User")
-
-# 4. Verify
 dotagen --version
 ```
 
-### Install via `go install`
-
-If you have Go configured, you can install directly without cloning:
-
-```bash
-go install github.com/enolalabs/dotagen/cmd/dotagen@latest
-```
-
-This places the binary in `$GOPATH/bin` (or `%USERPROFILE%\go\bin` on Windows). Make sure that directory is in your `PATH`.
+</details>
 
 ## Built-in Skills
 
-dotagen ships with **726 official skills** from **54 vendors**, sourced from the [awesome-agent-skills](https://github.com/enolalabs/awesome-agent-skills) registry. They are injected automatically when you run `dotagen init`.
+dotagen ships with **740 official skills** from **55 vendors**, sourced from the [awesome-agent-skills](https://github.com/enolalabs/awesome-agent-skills) registry and [obra/superpowers](https://github.com/obra/superpowers). They are injected automatically when you run `dotagen init`.
 
 All skills are **disabled by default**. You decide which skills to enable and for which platforms.
 
@@ -121,7 +121,7 @@ All skills are **disabled by default**. You decide which skills to enable and fo
 
 | Category | Count |
 |---|---|
-| Developer Tools | 163 |
+| Developer Tools | 177 |
 | Product & Strategy | 137 |
 | AI & Machine Learning | 87 |
 | Testing & QA | 57 |
@@ -139,7 +139,7 @@ All skills are **disabled by default**. You decide which skills to enable and fo
 ### Vendors
 
 <details>
-<summary><strong>View all 54 vendors</strong></summary>
+<summary><strong>View all 55 vendors</strong></summary>
 
 | Vendor | Skills | Category |
 |---|---|---|
@@ -149,6 +149,7 @@ All skills are **disabled by default**. You decide which skills to enable and fo
 | deanpeters | 46 | Product & Strategy |
 | OpenAI | 36 | AI & Machine Learning |
 | Sentry | 28 | DevOps & Monitoring |
+| Superpowers | 14 | Developer Tools |
 | Garry Tan | 27 | Developer Tools |
 | Trail of Bits | 21 | Security |
 | Google | 19 | Cloud & Infrastructure |
@@ -216,13 +217,13 @@ Built-in skills use the `dotagent:` prefix:
 dotagen init
 ```
 
-Creates `.dotagen/` with all 726 built-in skills and a config file where everything is disabled by default:
+Creates `.dotagen/` with all 740 built-in skills and a config file where everything is disabled by default:
 
 ```
 .dotagen/
 ├── config.yaml       # Configuration — set targets to enable skills
 ├── agents/           # Your custom agent definitions (*.md)
-├── skills/           # 726 built-in skill directories (dotagent-*/SKILL.md)
+├── skills/           # 740 built-in skill directories (dotagent-*/SKILL.md)
 ├── .generated/       # Rendered output (git-ignored)
 └── .gitignore
 ```
@@ -234,6 +235,7 @@ Edit `.dotagen/config.yaml` to enable skills by setting their `targets`. By defa
 ```yaml
 targets:
   - claude-code
+  - cursor
   - gemini-cli
   - opencode
 
@@ -299,7 +301,7 @@ Shows the state of each agent/skill on each platform:
 
 | Command | Description |
 |---|---|
-| `dotagen init` | Initialize `.dotagen/` with 726 built-in skills (all disabled) |
+| `dotagen init` | Initialize `.dotagen/` with 740 built-in skills (all disabled) |
 | `dotagen sync [target]` | Render & symlink agents and skills. Optionally specify a target platform |
 | `dotagen status` | Show sync status of all agents and skills |
 | `dotagen clean` | Remove all generated files and symlinks (agents + skills) |
@@ -307,8 +309,8 @@ Shows the state of each agent/skill on each platform:
 | `dotagen skill create <name>` | Create a new skill directory with scaffold SKILL.md |
 | `dotagen skill delete <name>` | Delete a skill directory and config entry |
 | `dotagen serve` | Start web dashboard at `http://localhost:7890` |
-| `dotagen --version` | Print version |
-| `dotagen --help` | Print help |
+| `dotagen update` | Update dotagen to the latest version |
+| `dotagen version` | Print version |
 
 ## Web Dashboard
 
@@ -365,6 +367,7 @@ dotagen serve --open=false    # Don't auto-open browser
 # Platforms to target
 targets:
   - claude-code
+  - cursor
   - gemini-cli
   - opencode
 
@@ -482,8 +485,11 @@ make clean     # Remove build artifacts
 │   │   ├── antigravity.go
 │   │   ├── claude_code.go
 │   │   ├── codex.go
+│   │   ├── cursor.go
 │   │   ├── gemini_cli.go
+│   │   ├── github_copilot.go
 │   │   ├── opencode.go
+│   │   ├── windsurf.go
 │   │   └── registry.go
 │   └── web/                     # Web dashboard (go:embed)
 │       ├── server.go
@@ -492,7 +498,7 @@ make clean     # Remove build artifacts
 │       └── static/
 ├── skillsrc/                    # Built-in skills (go:embed)
 │   ├── embed.go
-│   └── data/                    # 726 skill directories
+│   └── data/                    # 740 skill directories
 ├── scripts/
 │   └── fetch-official-skills.py # Skill fetcher from awesome-agent-skills
 ├── go.mod
@@ -502,7 +508,7 @@ make clean     # Remove build artifacts
 
 ## Acknowledgments
 
-- The 726 built-in skills are sourced from the [**awesome-agent-skills**](https://github.com/enolalabs/awesome-agent-skills) registry — a curated collection of official vendor skills from 54 organizations including Microsoft, OpenAI, Anthropic, Google, NVIDIA, Stripe, Cloudflare, and many more.
+- The 740 built-in skills are sourced from the [**awesome-agent-skills**](https://github.com/enolalabs/awesome-agent-skills) registry — a curated collection of official vendor skills from 55 organizations including Microsoft, OpenAI, Anthropic, Google, NVIDIA, Stripe, Cloudflare, and many more — plus [**obra/superpowers**](https://github.com/obra/superpowers).
 
 ## License
 

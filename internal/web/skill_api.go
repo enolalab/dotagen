@@ -284,7 +284,7 @@ func (s *Server) handleSyncWithSkills(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusNotFound, err.Error())
 		return
 	}
-	projectDir, err := config.GetProjectDir()
+	projectDir, err := s.projectDir()
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error())
 		return

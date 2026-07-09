@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'><polyline points='4 17 10 11 4 5'/><line x1='12' y1='19' x2='20' y2='19'/></svg>">
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -119,23 +119,23 @@
             </div>
         </div>
         <!-- Navigation -->
-        <nav class="space-y-1" id="nav-menu">
-            <a class="nav-item flex items-center gap-3 px-3 py-2 text-primary bg-surface-container-high border-r-2 border-primary font-mono-sm cursor-pointer" data-view="overview" onclick="switchView('overview')">
-                <span class="material-symbols-outlined">dashboard</span>
+        <nav class="space-y-0.5" id="nav-menu">
+            <a class="nav-item flex items-center gap-2.5 px-3 py-1.5 text-primary bg-surface-container-high border-r-2 border-primary font-mono-sm cursor-pointer" data-view="overview" onclick="switchView('overview')">
+                <span class="material-symbols-outlined !text-[16px]">dashboard</span>
                 <span>Overview</span>
             </a>
-            <a class="nav-item flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-200 font-mono-sm cursor-pointer" data-view="agents" onclick="switchView('agents')">
-                <span class="material-symbols-outlined">smart_toy</span>
+            <a class="nav-item flex items-center gap-2.5 px-3 py-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-200 font-mono-sm cursor-pointer" data-view="agents" onclick="switchView('agents')">
+                <span class="material-symbols-outlined !text-[16px]">smart_toy</span>
                 <span>Agent Library</span>
                 <span class="ml-auto text-[10px] text-on-surface-variant opacity-50 font-mono-sm" id="nav-agent-count"></span>
             </a>
-            <a class="nav-item flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-200 font-mono-sm cursor-pointer" data-view="skills" onclick="switchView('skills')">
-                <span class="material-symbols-outlined">extension</span>
+            <a class="nav-item flex items-center gap-2.5 px-3 py-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-200 font-mono-sm cursor-pointer" data-view="skills" onclick="switchView('skills')">
+                <span class="material-symbols-outlined !text-[16px]">extension</span>
                 <span>Skill Library</span>
                 <span class="ml-auto text-[10px] text-on-surface-variant opacity-50 font-mono-sm" id="nav-skill-count"></span>
             </a>
-            <a class="nav-item flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-200 font-mono-sm cursor-pointer" data-view="status" onclick="switchView('status')">
-                <span class="material-symbols-outlined">sync_alt</span>
+            <a class="nav-item flex items-center gap-2.5 px-3 py-1.5 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors duration-200 font-mono-sm cursor-pointer" data-view="status" onclick="switchView('status')">
+                <span class="material-symbols-outlined !text-[16px]">sync_alt</span>
                 <span>Sync Status</span>
                 <span class="ml-auto hidden" id="nav-status-badge"></span>
             </a>
@@ -143,10 +143,6 @@
     </div>
     <!-- CTA -->
     <div class="mt-auto p-container-padding border-t border-outline-variant space-y-4">
-        <button class="w-full h-8 bg-primary text-on-primary font-mono-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all" onclick="triggerSync()">
-            <span class="material-symbols-outlined !text-[16px]">sync</span>
-            Sync All
-        </button>
         <div class="flex items-center gap-3 px-3">
             <div class="w-7 h-7 rounded-full bg-surface-container-highest flex items-center justify-center border border-outline-variant">
                 <span class="material-symbols-outlined !text-[14px] text-on-surface-variant">person</span>
@@ -218,13 +214,20 @@
                     </div>
                 </div>
                 <div class="flex flex-col gap-2">
-                    <button class="flex-1 h-[36px] bg-primary text-on-primary font-mono-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all" onclick="triggerSync()">
-                        <span class="material-symbols-outlined !text-[16px]">sync</span>
-                        Sync All
+                    <button class="h-[36px] bg-primary text-on-primary font-mono-sm font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all" onclick="triggerCleanBroken()">
+                        <span class="material-symbols-outlined !text-[16px]">build</span>
+                        Fix Broken
                     </button>
-                    <button class="flex-1 h-[36px] border border-outline-variant text-on-surface font-mono-sm hover:bg-surface-container-low active:scale-95 transition-all" onclick="triggerClean()">
-                        Clean Symlinks
-                    </button>
+                    <div class="flex gap-2">
+                        <button class="flex-1 h-[36px] border border-outline-variant text-on-surface font-mono-sm hover:bg-surface-container-low active:scale-95 transition-all flex items-center justify-center gap-1" onclick="triggerInit()">
+                            <span class="material-symbols-outlined !text-[16px]">restart_alt</span>
+                            Reinit
+                        </button>
+                        <button class="flex-1 h-[36px] border border-outline-variant text-on-surface font-mono-sm hover:bg-surface-container-low active:scale-95 transition-all flex items-center justify-center gap-1" onclick="triggerClean()">
+                            <span class="material-symbols-outlined !text-[16px]">delete</span>
+                            Clean All
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -268,14 +271,15 @@
                     <table class="w-full text-left font-mono-sm border-collapse">
                         <thead>
                             <tr class="text-on-surface-variant border-b border-outline-variant bg-surface-container-lowest">
-                                <th class="px-4 py-2 font-label-caps uppercase">Agent</th>
+                                <th class="px-4 py-2 font-label-caps uppercase">Name</th>
+                                <th class="px-4 py-2 font-label-caps uppercase">Type</th>
                                 <th class="px-4 py-2 font-label-caps uppercase">Platform</th>
                                 <th class="px-4 py-2 font-label-caps uppercase">Path</th>
                                 <th class="px-4 py-2 font-label-caps uppercase text-right">Status</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-outline-variant" id="overview-recent">
-                            <tr><td colspan="4" class="px-4 py-8 text-center text-on-surface-variant">Loading…</td></tr>
+                            <tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">Loading…</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -304,39 +308,15 @@
             <button class="px-2 py-0.5 text-[10px] font-mono-sm text-on-surface-variant hover:text-primary" onclick="bulkDisableAll()">ALL OFF</button>
             <button class="px-2 py-0.5 text-[10px] font-mono-sm text-on-surface-variant hover:text-primary ml-auto" onclick="clearSelection()">CLEAR</button>
         </div>
-        <!-- List / Matrix toggle -->
+        <!-- Sub-header -->
         <div class="flex items-center justify-between px-container-padding py-2 border-b border-outline-variant">
             <span class="font-mono-sm text-on-surface-variant" id="agent-count"></span>
-            <div class="flex items-center gap-component-gap-dense border border-outline-variant overflow-hidden">
-                <button class="px-2 py-1 bg-surface-container-high text-primary view-toggle-btn active" id="agent-list-btn" onclick="setLibraryView('list')">
-                    <span class="material-symbols-outlined !text-[16px]">list</span>
-                </button>
-                <button class="px-2 py-1 text-on-surface-variant hover:bg-surface-container-low view-toggle-btn" id="agent-matrix-btn" onclick="setLibraryView('matrix')">
-                    <span class="material-symbols-outlined !text-[16px]">grid_view</span>
-                </button>
-            </div>
         </div>
         <!-- Content -->
         <div class="flex-1 overflow-auto" id="agent-content">
-            <!-- List view -->
-            <div id="agent-list-view">
-                <table class="w-full text-left font-mono-sm border-collapse">
-                    <thead class="sticky top-0 z-10">
-                        <tr class="text-on-surface-variant border-b border-outline-variant bg-surface-container-lowest">
-                            <th class="px-4 py-2 w-10"><input type="checkbox" id="agent-select-all" class="agent-cb" onchange="toggleSelectAll(this.checked)"></th>
-                            <th class="px-4 py-2 font-label-caps uppercase">Agent</th>
-                            <th class="px-4 py-2 font-label-caps uppercase">Description</th>
-                            <th class="px-4 py-2 font-label-caps uppercase">Category</th>
-                            <th class="px-4 py-2 font-label-caps uppercase" id="agent-platform-header">Platforms</th>
-                            <th class="px-2 py-2 w-8"></th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-outline-variant" id="agent-tbody"></tbody>
-                </table>
-            </div>
             <!-- Matrix view -->
-            <div class="hidden p-container-padding overflow-auto" id="agent-matrix-view">
-                <table class="border-separate border-spacing-0 table-fixed min-w-[800px] w-full" id="agent-matrix-table">
+            <div class="p-container-padding overflow-auto matrix-container" id="agent-matrix-view">
+                <table class="border-separate border-spacing-0 table-fixed w-full font-mono-sm" id="agent-matrix-table">
                     <thead id="agent-matrix-head"></thead>
                     <tbody id="agent-matrix-body"></tbody>
                 </table>
@@ -346,7 +326,7 @@
         <div class="hidden flex-1 flex-col items-center justify-center p-container-padding" id="agent-empty">
             <span class="material-symbols-outlined text-outline !text-[48px] mb-4">smart_toy</span>
             <h3 class="font-headline text-headline text-on-surface mb-2">No agents yet</h3>
-            <p class="text-body-sm text-on-surface-variant mb-4 text-center max-w-sm">Create your first agent or run <code class="px-1 py-0.5 bg-surface-container-low font-mono-sm text-primary">dotagen init</code> to import 144 built-in agents.</p>
+            <p class="text-body-sm text-on-surface-variant mb-4 text-center max-w-sm">Create your first agent or run <code class="px-1 py-0.5 bg-surface-container-low font-mono-sm text-primary">dotagen init</code> to import built-in agents.</p>
             <button class="h-8 px-4 bg-primary text-on-primary font-mono-sm font-bold hover:opacity-90 active:scale-95 transition-all" onclick="showCreateAgent()">Create Agent</button>
         </div>
     </div>
@@ -357,6 +337,7 @@
         <div class="flex items-center justify-between px-container-padding py-2 border-b border-outline-variant bg-surface-container-lowest">
             <div class="flex items-center gap-gutter flex-wrap" id="skill-filters"></div>
             <div class="flex items-center gap-component-gap-normal">
+                <div id="skill-vendor-filter"></div>
                 <span class="text-[10px] font-label-caps text-on-surface-variant">BULK</span>
                 <div class="flex gap-1" id="skill-bulk-actions"></div>
             </div>
@@ -377,26 +358,17 @@
             <span class="font-mono-sm text-on-surface-variant" id="skill-count"></span>
         </div>
         <!-- Content -->
-        <div class="flex-1 overflow-auto">
-            <table class="w-full text-left font-mono-sm border-collapse">
-                <thead class="sticky top-0 z-10">
-                    <tr class="text-on-surface-variant border-b border-outline-variant bg-surface-container-lowest">
-                        <th class="px-4 py-2 w-10"><input type="checkbox" id="skill-select-all" class="agent-cb" onchange="toggleSkillSelectAll(this.checked)"></th>
-                        <th class="px-4 py-2 font-label-caps uppercase">Skill</th>
-                        <th class="px-4 py-2 font-label-caps uppercase">Description</th>
-                        <th class="px-4 py-2 font-label-caps uppercase">Category</th>
-                        <th class="px-4 py-2 font-label-caps uppercase" id="skill-platform-header">Platforms</th>
-                        <th class="px-2 py-2 w-8"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-outline-variant" id="skill-tbody"></tbody>
+        <div class="flex-1 overflow-auto matrix-container" id="skill-content">
+            <table class="border-separate border-spacing-0 table-fixed w-full font-mono-sm" id="skill-matrix-table">
+                <thead id="skill-matrix-head"></thead>
+                <tbody id="skill-matrix-body"></tbody>
             </table>
         </div>
         <!-- Empty states -->
         <div class="hidden flex-1 flex-col items-center justify-center p-container-padding" id="skill-empty">
             <span class="material-symbols-outlined text-outline !text-[48px] mb-4">extension</span>
             <h3 class="font-headline text-headline text-on-surface mb-2">No skills yet</h3>
-            <p class="text-body-sm text-on-surface-variant mb-4 text-center max-w-sm">Create your first skill or run <code class="px-1 py-0.5 bg-surface-container-low font-mono-sm text-primary">dotagen init</code> to import 16 built-in skills.</p>
+            <p class="text-body-sm text-on-surface-variant mb-4 text-center max-w-sm">Create your first skill or run <code class="px-1 py-0.5 bg-surface-container-low font-mono-sm text-primary">dotagen init</code> to import 740 built-in skills.</p>
             <button class="h-8 px-4 bg-primary text-on-primary font-mono-sm font-bold hover:opacity-90 active:scale-95 transition-all" onclick="showCreateSkill()">Create Skill</button>
         </div>
     </div>
@@ -407,11 +379,14 @@
         <div class="flex items-center justify-between px-container-padding py-2 border-b border-outline-variant bg-surface-container-lowest">
             <div class="flex items-center gap-gutter flex-wrap" id="status-filters"></div>
             <div class="flex items-center gap-2">
-                <button class="h-7 px-3 bg-primary text-on-primary font-mono-sm font-bold flex items-center gap-1 hover:opacity-90 active:scale-95 transition-all" onclick="triggerSync()">
-                    <span class="material-symbols-outlined !text-[14px]">sync</span>
-                    Sync All
+                <button class="h-7 px-3 border border-outline-variant text-on-surface font-mono-sm hover:bg-surface-container-low active:scale-95 transition-all flex items-center gap-1" onclick="triggerCleanBroken()">
+                    <span class="material-symbols-outlined !text-[14px]">link_off</span>
+                    Fix Broken
                 </button>
-                <button class="h-7 px-3 border border-outline-variant text-on-surface font-mono-sm hover:bg-surface-container-low active:scale-95 transition-all" onclick="triggerClean()">Clean</button>
+                <button class="h-7 px-3 border border-outline-variant text-on-surface font-mono-sm hover:bg-surface-container-low active:scale-95 transition-all flex items-center gap-1" onclick="triggerClean()">
+                    <span class="material-symbols-outlined !text-[14px]">delete</span>
+                    Clean All
+                </button>
             </div>
         </div>
         <!-- Status list -->
@@ -421,7 +396,8 @@
                     <thead class="sticky top-0 z-10">
                         <tr class="text-on-surface-variant border-b border-outline-variant bg-surface-container-lowest">
                             <th class="px-4 py-2 font-label-caps uppercase">Status</th>
-                            <th class="px-4 py-2 font-label-caps uppercase">Agent</th>
+                            <th class="px-4 py-2 font-label-caps uppercase">Name</th>
+                            <th class="px-4 py-2 font-label-caps uppercase">Type</th>
                             <th class="px-4 py-2 font-label-caps uppercase">Platform</th>
                             <th class="px-4 py-2 font-label-caps uppercase">Path</th>
                             <th class="px-2 py-2 w-8"></th>
@@ -433,7 +409,7 @@
             <div class="hidden flex-col items-center justify-center p-container-padding mt-8" id="status-empty">
                 <span class="material-symbols-outlined text-outline !text-[48px] mb-4">check_circle</span>
                 <h3 class="font-headline text-headline text-on-surface mb-2">No generated files</h3>
-                <p class="text-body-sm text-on-surface-variant text-center">Run Sync to generate platform-specific files from your agents.</p>
+                <p class="text-body-sm text-on-surface-variant text-center">Toggle a platform on any agent or skill to create symlinks.</p>
             </div>
         </div>
     </div>

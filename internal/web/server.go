@@ -49,6 +49,7 @@ func (s *Server) Start() error {
 	mux.HandleFunc("POST /api/sync", s.handleSync)
 	mux.HandleFunc("POST /api/sync/{target}", s.handleSyncTarget)
 	mux.HandleFunc("POST /api/clean", s.handleClean)
+	mux.HandleFunc("POST /api/clean-broken", s.handleCleanBroken)
 	mux.HandleFunc("GET /api/status", s.handleStatus)
 
 	// Skill API routes
@@ -59,6 +60,8 @@ func (s *Server) Start() error {
 	mux.HandleFunc("DELETE /api/skills/{name}", s.handleDeleteSkill)
 	mux.HandleFunc("GET /api/preview/skill/{skill}/{target}", s.handlePreviewSkill)
 	mux.HandleFunc("POST /api/sync-skills", s.handleSyncWithSkills)
+	mux.HandleFunc("POST /api/toggle", s.handleToggle)
+	mux.HandleFunc("POST /api/init", s.handleInit)
 
 	return http.ListenAndServe(fmt.Sprintf(":%d", s.port), mux)
 }

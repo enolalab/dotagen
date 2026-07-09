@@ -11,8 +11,11 @@ func NewRegistry() *Registry {
 	r.Register(NewAntigravityAdapter())
 	r.Register(NewClaudeCodeAdapter())
 	r.Register(NewCodexAdapter())
+	r.Register(NewCopilotAdapter())
+	r.Register(NewCursorAdapter())
 	r.Register(NewGeminiCLIAdapter())
 	r.Register(NewOpenCodeAdapter())
+	r.Register(NewWindsurfAdapter())
 	return r
 }
 
