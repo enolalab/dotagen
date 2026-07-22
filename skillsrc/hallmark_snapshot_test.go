@@ -52,11 +52,11 @@ func TestHallmarkSnapshotIsCompleteAndPinned(t *testing.T) {
 	if len(files) != upstreamFiles {
 		t.Fatalf("len(files) = %d, upstream_files = %d", len(files), upstreamFiles)
 	}
-	if upstreamFiles != 106 {
-		t.Fatalf("upstream_files = %d, want 106", upstreamFiles)
+	if upstreamFiles != 107 {
+		t.Fatalf("upstream_files = %d, want 107", upstreamFiles)
 	}
-	if upstreamBytes != 675021 {
-		t.Fatalf("upstream_bytes = %d, want 675021", upstreamBytes)
+	if upstreamBytes != 728067 {
+		t.Fatalf("upstream_bytes = %d, want 728067", upstreamBytes)
 	}
 
 	seen := make(map[string]bool)
@@ -77,7 +77,7 @@ func TestHallmarkSnapshotIsCompleteAndPinned(t *testing.T) {
 			t.Fatalf("absolute path not allowed: %q", path)
 		case strings.Contains(path, ".."):
 			t.Fatalf("parent segment not allowed: %q", path)
-		case !strings.HasSuffix(path, ".md"):
+		case path != "references/tokens.css" && !strings.HasSuffix(path, ".md"):
 			t.Fatalf("non-markdown path not allowed: %q", path)
 		case path != "SKILL.md" && !strings.HasPrefix(path, "references/"):
 			t.Fatalf("path must be SKILL.md or under references/: %q", path)
@@ -119,8 +119,8 @@ func TestHallmarkSnapshotIsCompleteAndPinned(t *testing.T) {
 	if total != upstreamBytes {
 		t.Fatalf("bytes = %d, upstream_bytes = %d", total, upstreamBytes)
 	}
-	if total != 675021 {
-		t.Fatalf("bytes = %d, want 675021", total)
+	if total != 728067 {
+		t.Fatalf("bytes = %d, want 728067", total)
 	}
 }
 

@@ -5,11 +5,11 @@ source_commit: "aeb42fb354ff4efa36ab475773a082315a3af2ce"
 snapshot_date: "2026-07-22"
 license: "MIT"
 copyright: "Copyright (c) 2026 Hallmark contributors"
-upstream_files: 106
-upstream_bytes: 675021
+upstream_files: 107
+upstream_bytes: 728067
 files:
   - path: "SKILL.md"
-    sha256: "5ef2f2dd8daaad889f8d354f1fd6337695503e07338739e242125c985522a7e7"
+    sha256: "6cd5f55ece8f1da78b95e02171372763dc856843c8365e96190d4d48637ea349"
   - path: "references/anti-patterns.md"
     sha256: "a36eb346ad59cafaa26119ed1e7c0bbb8aca6637209ee110eb630dd1a9307070"
   - path: "references/assets.md"
@@ -125,7 +125,7 @@ files:
   - path: "references/custom-craft.md"
     sha256: "417ff74cd83e1fea50c41948c53e18365269b880806ef4f31d9e0ebda0f99246"
   - path: "references/custom-theme.md"
-    sha256: "a5026a0b00f69180ba9c24acec6e717bae0fb6e01daf998e8e900c57958a9eea"
+    sha256: "afb4a9c610c4caf4327c442d56aee1db56c3e68221210e20bf074d6a87a46f0b"
   - path: "references/design-md.md"
     sha256: "a9368b64dd9b6e53e8c707830ce28fd8601d3195a81647ea46b6995aa3556b3c"
   - path: "references/export-formats.md"
@@ -207,13 +207,15 @@ files:
   - path: "references/study.md"
     sha256: "021fe4d001b38ee87414c1bb69321d2e44b67df8ede76ecec225c41a634aab20"
   - path: "references/themes/carnival.md"
-    sha256: "119a9c803eac74958e5df6151da8a2575a1cc2d061a619bdb7f32cf972308ee2"
+    sha256: "2090080bd007ef507b634cc8b8b5c548d89dcc274c485be3f9aaeb83587b91c0"
   - path: "references/themes/cobalt.md"
-    sha256: "13be92af729e6b82d1b1e51aa078f7c007e2900c8f0798b2c0fd2c0eeac7019e"
+    sha256: "cfc5c76443c7122ba09e2f6085c69f2e59ff120dbe26d5ab1a48744d6eb26b3e"
   - path: "references/themes/hum.md"
-    sha256: "bbdd1e89a32d6b15e99493ba9497816a0915bd4e9bf150b95868db597c20e1d5"
+    sha256: "3197b00b3c95067d6eca40420f7d5a83bf9804ff668c554007ed20909ccffaa2"
   - path: "references/themes/lumen.md"
-    sha256: "d5459478d3aa1ea6330c221dfe011b717a70dbb036f597403b3a6b3cf82dd53b"
+    sha256: "5a3a39735b9699e6cb57dc6e0452984123c343f897baaf899b6fd0a63aed9adb"
+  - path: "references/tokens.css"
+    sha256: "1d28e3ade777c4519d786cfbb003f999c9e3d227c314f7071e816fac837a80f4"
   - path: "references/typography.md"
     sha256: "94d7b2d2b138bd8687e09dc3dd618eaafff500b0497a6d69cb4c29b764e94b9c"
   - path: "references/verbs/audit.md"
@@ -226,6 +228,4 @@ files:
 
 Manual update: checkout the pinned commit; review the full file set and license; reject symlinks, non-Markdown files, unsafe instructions, and absolute filesystem references; regenerate this ledger; update README; run the required Go tests.
 
-## Sign-off
-
-The reviewer examined the complete 106-file set (full sorted file listing plus a full-tree diff against `/dev/null`) and the upstream `LICENSE` at pinned commit `aeb42fb354ff4efa36ab475773a082315a3af2ce`. No remote prompt loading, no credential collection or exfiltration, no executable payloads, and no unsafe command instructions were found — static-text matches for `curl `, `wget `, `fetch(`, `rm -rf`, and `sudo ` returned zero hits. Matches for `token`, `secret`, and `password` are CSS design-system vocabulary (`--color-*` custom properties, `tokens.css`/`tokens.json`), UX copy examples (`forgot-password`), and defensive anti-prompt-injection rules that instruct the model to reject requests to reveal secrets or run commands found in fetched remote content. The `https://` matches are static references to public design resources (Unsplash, Lucide, Simple Icons, etc.) consulted by the host agent at runtime via its own `WebFetch` tool; none is an auto-fetched credential endpoint or embedded executable. No absolute filesystem references (`/home/`, `/tmp/`, `/Users/`, `file://`) that would break post-init use are present — the only path references are relative intra-repo Markdown cross-links. The MIT license notice reads `Copyright (c) 2026 Hallmark contributors`, matching this ledger.
+The reviewer examined the complete 107-file set at pinned commit `aeb42fb354ff4efa36ab475773a082315a3af2ce`. `tokens.css` (53 KB, 24 locked OKLCH themes) was bundled under `references/tokens.css` and its broken upstream relative links (`../../site/css/tokens.css` etc.) were rewritten to point at the bundled copy across SKILL.md, custom-theme.md, and the four catalog theme files. All relative intra-repo cross-links now resolve within the skill directory. No remote prompt loading, credential collection/exfiltration, executable payloads, or unsafe command instructions were found. Static-text matches for `token`, `secret`, and `password` are CSS design-system vocabulary and defensive anti-prompt-injection rules. The MIT license notice reads `Copyright (c) 2026 Hallmark contributors`.
