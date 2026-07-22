@@ -116,7 +116,7 @@ dotagen --version
 
 ## Built-in Skills
 
-dotagen ships with **740 official skills** from **55 vendors**, sourced from the [awesome-agent-skills](https://github.com/enolalabs/awesome-agent-skills) registry and [obra/superpowers](https://github.com/obra/superpowers). They are injected automatically when you run `dotagen init`.
+dotagen ships with **769 official skills** from **58 vendors**. Most are sourced from the [awesome-agent-skills](https://github.com/enolalabs/awesome-agent-skills) registry and [obra/superpowers](https://github.com/obra/superpowers); [Hallmark](https://github.com/Nutlope/hallmark) is a separately pinned MIT snapshot from Nutlope. They are injected automatically when you run `dotagen init`.
 
 All skills are **disabled by default**. You decide which skills to enable and for which platforms.
 
@@ -132,7 +132,7 @@ All skills are **disabled by default**. You decide which skills to enable and fo
 | Backend & APIs | 53 |
 | DevOps & Monitoring | 35 |
 | Databases & Data | 24 |
-| Frontend & UI | 23 |
+| Frontend & UI | 24 |
 | Productivity & Collaboration | 21 |
 | Security | 21 |
 | Documents & Content | 18 |
@@ -142,7 +142,7 @@ All skills are **disabled by default**. You decide which skills to enable and fo
 ### Vendors
 
 <details>
-<summary><strong>View all 55 vendors</strong></summary>
+<summary><strong>View all 58 vendors</strong></summary>
 
 | Vendor | Skills | Category |
 |---|---|---|
@@ -201,6 +201,7 @@ All skills are **disabled by default**. You decide which skills to enable and fo
 | Remotion | 1 | Documents & Content |
 | Courier | 1 | Backend & APIs |
 | Typefully | 1 | Backend & APIs |
+| Nutlope | 1 | Frontend & UI |
 
 </details>
 
@@ -220,13 +221,13 @@ Built-in skills use the `dotagent:` prefix:
 dotagen init
 ```
 
-Creates `.dotagen/` with all 740 built-in skills and a config file where everything is disabled by default:
+Creates `.dotagen/` with all 769 built-in skills and a config file where everything is disabled by default:
 
 ```
 .dotagen/
 ├── config.yaml       # Configuration — set targets to enable skills
 ├── agents/           # Your custom agent definitions (*.md)
-├── skills/           # 740 built-in skill directories (dotagent-*/SKILL.md)
+├── skills/           # 769 built-in skill directories (dotagent-*/SKILL.md)
 ├── .generated/       # Rendered output (git-ignored)
 └── .gitignore
 ```
@@ -304,7 +305,7 @@ Shows the state of each agent/skill on each platform:
 
 | Command | Description |
 |---|---|
-| `dotagen init` | Initialize `.dotagen/` with 740 built-in skills (all disabled) |
+| `dotagen init` | Initialize `.dotagen/` with 769 built-in skills (all disabled) |
 | `dotagen sync [target]` | Render & symlink agents and skills. Optionally specify a target platform |
 | `dotagen status` | Show sync status of all agents and skills |
 | `dotagen clean` | Remove all generated files and symlinks (agents + skills) |
@@ -325,7 +326,7 @@ Starts a web dashboard at `http://localhost:7890` with the following features:
 
 - **Overview** — Stats, category distribution, platform health, symlink status
 - **Agent Library** — Matrix view: toggle agents across 8 platforms, bulk column toggle
-- **Skill Library** — Matrix view: toggle 768 skills across 8 platforms, filter by category/vendor
+- **Skill Library** — Matrix view: toggle 769 skills across 8 platforms, filter by category/vendor
 - **Status** — View all symlinks (agents + skills) with type badges, Fix Broken button
 - **Preview** — View rendered output for each platform
 - **Clean / Reinit** — Remove all symlinks or reinitialize from built-in library
@@ -531,7 +532,7 @@ make clean     # Remove build artifacts
 │       └── static/
 ├── skillsrc/                    # Built-in skills (go:embed)
 │   ├── embed.go
-│   └── data/                    # 740 skill directories
+│   └── data/                    # 769 skill directories
 ├── scripts/
 │   └── fetch-official-skills.py # Skill fetcher from awesome-agent-skills
 ├── go.mod
@@ -541,7 +542,7 @@ make clean     # Remove build artifacts
 
 ## Acknowledgments
 
-- The 740 built-in skills are sourced from the [**awesome-agent-skills**](https://github.com/enolalabs/awesome-agent-skills) registry — a curated collection of official vendor skills from 55 organizations including Microsoft, OpenAI, Anthropic, Google, NVIDIA, Stripe, Cloudflare, and many more — plus [**obra/superpowers**](https://github.com/obra/superpowers).
+- The 769 built-in skills are sourced from the [**awesome-agent-skills**](https://github.com/enolalabs/awesome-agent-skills) registry — a curated collection of official vendor skills from 58 organizations including Microsoft, OpenAI, Anthropic, Google, NVIDIA, Stripe, Cloudflare, and many more — plus [**obra/superpowers**](https://github.com/obra/superpowers); [**Hallmark**](https://github.com/Nutlope/hallmark) is a separately pinned MIT snapshot from [Nutlope](https://github.com/Nutlope).
 
 ## License
 
