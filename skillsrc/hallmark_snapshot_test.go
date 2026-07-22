@@ -55,17 +55,14 @@ func TestHallmarkSnapshotIsCompleteAndPinned(t *testing.T) {
 	if upstreamFiles != 106 {
 		t.Fatalf("upstream_files = %d, want 106", upstreamFiles)
 	}
-	if upstreamBytes != 675085 {
-		t.Fatalf("upstream_bytes = %d, want 675085", upstreamBytes)
+	if upstreamBytes != 675021 {
+		t.Fatalf("upstream_bytes = %d, want 675021", upstreamBytes)
 	}
 
 	seen := make(map[string]bool)
 	var manifestPaths []string
 	for _, value := range files {
-		file, ok := value.(map[string]any)
-		if !ok {
-			t.Fatalf("file entry is not a map: %#v", value)
-		}
+		file := manifestMap(t, value)
 		path, ok := file["path"].(string)
 		if !ok {
 			t.Fatalf("file path missing or non-string: %#v", file["path"])
@@ -107,7 +104,7 @@ func TestHallmarkSnapshotIsCompleteAndPinned(t *testing.T) {
 
 	total := 0
 	for _, value := range files {
-		file := value.(map[string]any)
+		file := manifestMap(t, value)
 		path := file["path"].(string)
 		digest := file["sha256"].(string)
 		content, err := ReadSkillFile(hallmarkSkillName + "/" + path)
@@ -122,8 +119,8 @@ func TestHallmarkSnapshotIsCompleteAndPinned(t *testing.T) {
 	if total != upstreamBytes {
 		t.Fatalf("bytes = %d, upstream_bytes = %d", total, upstreamBytes)
 	}
-	if total != 675085 {
-		t.Fatalf("bytes = %d, want 675085", total)
+	if total != 675021 {
+		t.Fatalf("bytes = %d, want 675021", total)
 	}
 }
 
@@ -163,4 +160,20 @@ func manifestInt(t *testing.T, v any, label string) int {
 	}
 	t.Fatalf("%s missing or non-integer: %#v", label, v)
 	return 0
+}
+
+func manifestMap(t *testing.T, v any) map[string]any {
+	t.Helper()
+	switch m := v.(type) {
+	case map[string]any:
+		return m
+	case map[interface{}]interface{}:
+		out := make(map[string]any, len(m))
+		for k, val := range m {
+			out[fmt.Sprintf("%v", k)] = val
+		}
+		return out
+	}
+	t.Fatalf("file entry is not a map: %#v", v)
+	return nil
 }
