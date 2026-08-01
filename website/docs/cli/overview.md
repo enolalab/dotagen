@@ -23,10 +23,8 @@ for a command's flags and arguments.
 
 ## Known command-documentation mismatches
 
-- Use `dotagen version`, not `dotagen --version`. The latter is stale README
-  prose, not a documented CLI flag.
-- `dotagen serve` accepts `--port` only. There is no `serve --open` flag;
-  examples using it are stale.
+- Use `dotagen version` to print version information.
+- Use `dotagen serve --port <port>` to choose the dashboard port.
 - The `sync` long help text names only five targets, but the command validates
   and accepts all eight current target IDs listed in the configuration
   reference.

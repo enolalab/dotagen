@@ -28,10 +28,10 @@ skills:
     targets: gemini-cli
 ```
 
-`targets` accepts either a YAML string or a YAML sequence. At an agent or skill
-entry, `all` resolves to the top-level `targets` list. An empty list disables
-that entry. `disabled: true` also prevents the entry from resolving to a
-target.
+The top-level `targets` field is a YAML sequence. At an agent or skill entry,
+`targets` accepts either a YAML string or a YAML sequence. `all` resolves to
+the top-level `targets` list. An empty list disables that entry. `disabled:
+true` also prevents the entry from resolving to a target.
 
 The supported selectors are `antigravity`, `claude-code`, `codex`, `cursor`,
 `gemini-cli`, `github-copilot`, `opencode`, and `windsurf`. Use only these

@@ -22,6 +22,7 @@ validation:
 
 ```bash
 npm run build --prefix website
+go test ./...
 ```
 
 The Docusaurus build is configured to fail on broken links. The Go suite covers

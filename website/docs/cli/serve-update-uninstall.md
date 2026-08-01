@@ -17,9 +17,6 @@ all network interfaces. The dashboard and REST API have no authentication.
 Use it only on a trusted local network; do not expose the port to an untrusted
 network until the code provides stronger binding or authentication.
 
-There is no `--open` option. `dotagen serve --open=false` is not a valid
-command.
-
 ## `dotagen update`
 
 Checks GitHub Releases for `enolalabs/dotagen`, downloads the matching current
