@@ -486,6 +486,23 @@ Instructions for the skill...
 ### Requirements
 
 - Go 1.26+
+- Node.js 22+ (documentation site)
+
+### Documentation Site
+
+The documentation site is built with Docusaurus and deployed to
+[dotagen.enolalab.com](https://dotagen.enolalab.com/).
+
+```bash
+npm install --prefix website
+npm run start --prefix website
+```
+
+Build the production site with:
+
+```bash
+npm run build --prefix website
+```
 
 ### Commands
 
