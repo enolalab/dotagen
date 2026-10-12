@@ -96,7 +96,7 @@ for ln in fm.split('\n'):
             desc.append(ln)
         else:
             break
-assert len(desc) == 10, f"expected 10 description lines, got {len(desc)}"
+assert len(desc) == 11, f"expected 11 description lines, got {len(desc)}"
 new_fm = ('---\n'
     'name: "dotagent:qingyuna:answer-me-with-html"\n'
     'description: >-\n' + '\n'.join(desc) + '\n'
