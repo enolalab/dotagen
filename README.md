@@ -116,7 +116,7 @@ dotagen --version
 
 ## Built-in Skills
 
-dotagen ships with **843 skills** from **60 vendors** and **203 built-in agents**. Most skills are sourced from the [awesome-agent-skills](https://github.com/enolalabs/awesome-agent-skills) registry and [obra/superpowers](https://github.com/obra/superpowers); [Hallmark](https://github.com/Nutlope/hallmark) and [answer-me-with-html](https://github.com/QingYunA/answer-me-with-html) are separately pinned MIT snapshots from Nutlope and QingYunA respectively; game-development agents and skills come from [claude-code-game-studios](https://github.com/donchitos/claude-code-game-studios). They are injected automatically when you run `dotagen init`.
+dotagen ships with **845 skills** from **62 vendors** and **203 built-in agents**. Most skills are sourced from the [awesome-agent-skills](https://github.com/enolalabs/awesome-agent-skills) registry and [obra/superpowers](https://github.com/obra/superpowers); [Hallmark](https://github.com/Nutlope/hallmark), [answer-me-with-html](https://github.com/QingYunA/answer-me-with-html), [claude-remotion-skill](https://github.com/haidrrrry/claude-remotion-skill) and [remotion-motion-graphics-skill](https://github.com/fernandokaraka/remotion-motion-graphics-skill) are separately pinned MIT snapshots from Nutlope, QingYunA, haidrrrry and fernandokaraka respectively; game-development agents and skills come from [claude-code-game-studios](https://github.com/donchitos/claude-code-game-studios). They are injected automatically when you run `dotagen init`.
 
 📚 Detailed per-agent/per-skill descriptions for the curated bundles (Game Studios, VoltAgent, mattpocock) live in [docs/CATALOG.md](docs/CATALOG.md) ([Tiếng Việt](docs/CATALOG.vi.md)).
 
@@ -138,14 +138,14 @@ All skills are **disabled by default**. You decide which skills to enable and fo
 | Frontend & UI | 25 |
 | Productivity & Collaboration | 32 |
 | Security | 21 |
-| Documents & Content | 18 |
+| Documents & Content | 20 |
 | Search & Web | 16 |
 | Mobile & Desktop | 15 |
 
 ### Vendors
 
 <details>
-<summary><strong>View all 60 vendors</strong></summary>
+<summary><strong>View all 62 vendors</strong></summary>
 
 | Vendor | Skills | Category |
 |---|---|---|
@@ -208,6 +208,8 @@ All skills are **disabled by default**. You decide which skills to enable and fo
 | Typefully | 1 | Backend & APIs |
 | Nutlope | 1 | Frontend & UI |
 | QingYunA | 1 | Frontend & UI |
+| haidrrrry | 1 | Documents & Content |
+| fernandokaraka | 1 | Documents & Content |
 
 </details>
 
@@ -227,13 +229,13 @@ Built-in skills use the `dotagent:` prefix:
 dotagen init
 ```
 
-Creates `.dotagen/` with all 843 built-in skills and a config file where everything is disabled by default:
+Creates `.dotagen/` with all 845 built-in skills and a config file where everything is disabled by default:
 
 ```
 .dotagen/
 ├── config.yaml       # Configuration — set targets to enable skills
 ├── agents/           # Your custom agent definitions (*.md)
-├── skills/           # 843 built-in skill directories (dotagent-*/SKILL.md)
+├── skills/           # 845 built-in skill directories (dotagent-*/SKILL.md)
 ├── .generated/       # Rendered output (git-ignored)
 └── .gitignore
 ```
@@ -311,7 +313,7 @@ Shows the state of each agent/skill on each platform:
 
 | Command | Description |
 |---|---|
-| `dotagen init` | Initialize `.dotagen/` with 843 built-in skills (all disabled) |
+| `dotagen init` | Initialize `.dotagen/` with 845 built-in skills (all disabled) |
 | `dotagen sync [target]` | Render & symlink agents and skills. Optionally specify a target platform |
 | `dotagen status` | Show sync status of all agents and skills |
 | `dotagen clean` | Remove all generated files and symlinks (agents + skills) |
@@ -555,7 +557,7 @@ make clean     # Remove build artifacts
 │       └── static/
 ├── skillsrc/                    # Built-in skills (go:embed)
 │   ├── embed.go
-│   └── data/                    # 843 skill directories
+│   └── data/                    # 845 skill directories
 ├── scripts/
 │   ├── fetch-official-skills.py # Skill fetcher from awesome-agent-skills
 │   └── import-game-studios.py   # Importer for claude-code-game-studios agents/skills
@@ -584,7 +586,7 @@ The binaries are named `dotagen_<version>_<os>_<arch>[.exe]`, which is exactly w
 
 ## Acknowledgments
 
-- The built-in skills are sourced from the [**awesome-agent-skills**](https://github.com/enolalabs/awesome-agent-skills) registry — a curated collection of official vendor skills from 55 organizations including Microsoft, OpenAI, Anthropic, Google, NVIDIA, Stripe, Cloudflare, and many more — plus [**obra/superpowers**](https://github.com/obra/superpowers) and [**mattpocock/skills**](https://github.com/mattpocock/skills); [**Hallmark**](https://github.com/Nutlope/hallmark) and [**answer-me-with-html**](https://github.com/QingYunA/answer-me-with-html) are separately pinned MIT snapshots from [Nutlope](https://github.com/Nutlope) and [QingYunA](https://github.com/QingYunA) respectively.
+- The built-in skills are sourced from the [**awesome-agent-skills**](https://github.com/enolalabs/awesome-agent-skills) registry — a curated collection of official vendor skills from 55 organizations including Microsoft, OpenAI, Anthropic, Google, NVIDIA, Stripe, Cloudflare, and many more — plus [**obra/superpowers**](https://github.com/obra/superpowers) and [**mattpocock/skills**](https://github.com/mattpocock/skills); [**Hallmark**](https://github.com/Nutlope/hallmark), [**answer-me-with-html**](https://github.com/QingYunA/answer-me-with-html), [**claude-remotion-skill**](https://github.com/haidrrrry/claude-remotion-skill) and [**remotion-motion-graphics-skill**](https://github.com/fernandokaraka/remotion-motion-graphics-skill) are separately pinned MIT snapshots from [Nutlope](https://github.com/Nutlope), [QingYunA](https://github.com/QingYunA), [haidrrrry](https://github.com/haidrrrry) and [fernandokaraka](https://github.com/fernandokaraka) respectively.
 - The 154 `dotagent-voltagent-*` agents come from [**VoltAgent/awesome-claude-code-subagents**](https://github.com/VoltAgent/awesome-claude-code-subagents).
 - The 49 `dotagent-game-studios-*` agents and 73 `dotagent:game-studios:*` skills come from [**donchitos/claude-code-game-studios**](https://github.com/donchitos/claude-code-game-studios) (MIT) — a full virtual game studio (Unity, Unreal, Godot specialists, designers, producers, QA, live-ops) with sprint/gate/release workflows.
 
