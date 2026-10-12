@@ -980,10 +980,10 @@ Run:
 
 ```bash
 sed -i 's/843 skills/845 skills/; s/843 built-in/845 built-in/g; s/60 vendors/62 vendors/g; s/843 skill directories/845 skill directories/' README.md
-sed -i 's/| Documents & Content | 18 |/| Documents & Content | 20 |/' README.md
+sed -i 's/| Documents & Content | 18 |/| Documents \& Content | 20 |/' README.md
 sed -i 's/843 built-in skills from 60 vendors/845 built-in skills from 62 vendors/' docs/CATALOG.md
 sed -i 's/843 built-in skills từ 60 vendor/845 built-in skills từ 62 vendor/' docs/CATALOG.vi.md
-grep -rn "843 \|843-builtin\|60 vendors" README.md docs/CATALOG.md docs/CATALOG.vi.md || echo "counts clean"
+grep -rn "843 \|843-builtin\|60 vendor" README.md docs/CATALOG.md docs/CATALOG.vi.md || echo "counts clean"
 ```
 
 Expected: `counts clean` (no stale 843/60-vendors references remain).
