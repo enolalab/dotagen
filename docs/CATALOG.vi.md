@@ -2,7 +2,7 @@
 
 > 🇬🇧 English version: [CATALOG.md](CATALOG.md)
 
-> **Phạm vi:** Tài liệu này mô tả chi tiết các bộ agent/skill được tích hợp sẵn: bộ **Game Studios** (`dotagent-game-studios-*`, mới) và catalog `da-*`/`ds-*` trước đây (VoltAgent + mattpocock). Danh sách đầy đủ 843 built-in skills từ 60 vendor, số lượng theo category và cách bật `dotagent-*` được duy trì trong [README](../README.md#built-in-skills).
+> **Phạm vi:** Tài liệu này mô tả chi tiết các bộ agent/skill được tích hợp sẵn: bộ **Game Studios** (`dotagent-game-studios-*`, mới) và catalog `da-*`/`ds-*` trước đây (VoltAgent + mattpocock). Danh sách đầy đủ 845 built-in skills từ 62 vendor, số lượng theo category và cách bật `dotagent-*` được duy trì trong [README](../README.md#built-in-skills).
 
 > Tất cả agent/skill đều bị tắt theo mặc định — bạn chọn bật cái nào và cho nền tảng nào trong `config.yaml` hoặc qua Web Dashboard.
 
