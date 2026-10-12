@@ -2,7 +2,7 @@
 
 > 🇻🇳 Vietnamese version: [CATALOG.vi.md](CATALOG.vi.md)
 
-> **Scope:** This document describes the curated agent/skill bundles that ship with dotagen in detail: the **Game Studios** bundle (`dotagent-game-studios-*`, new) and the earlier `da-*`/`ds-*` catalog (VoltAgent + mattpocock). The full list of 842 built-in skills from 59 vendors, per-category counts, and how to enable `dotagent-*` entries are maintained in the [README](../README.md#built-in-skills).
+> **Scope:** This document describes the curated agent/skill bundles that ship with dotagen in detail: the **Game Studios** bundle (`dotagent-game-studios-*`, new) and the earlier `da-*`/`ds-*` catalog (VoltAgent + mattpocock). The full list of 843 built-in skills from 60 vendors, per-category counts, and how to enable `dotagent-*` entries are maintained in the [README](../README.md#built-in-skills).
 
 > Every agent and skill is **disabled by default** — you choose what to enable, and for which platforms, in `config.yaml` or via the Web Dashboard.
 
